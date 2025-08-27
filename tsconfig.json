@@ -1,0 +1,50 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ESNext",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+
+    /* Строгая проверка типов */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": false, // Из-за декораторов NestJS
+    "noImplicitThis": true,
+    "useUnknownInCatchVariables": true,
+    "alwaysStrict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+
+    /* Дополнительные проверки */
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+
+    /* Пути */
+    "paths": {
+      "@/*": ["src/*", "common/*"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "common/**/*",
+    "configs/**/*.ts",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "node_modules/@types/node/buffer.d.ts",
+    "node_modules/@types/node/buffer.d.ts"
+  ],
+  "exclude": ["node_modules", "dist", "test"]
+}
