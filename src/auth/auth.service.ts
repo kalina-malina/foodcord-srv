@@ -96,7 +96,8 @@ export class AuthService {
         divase: device,
         createAt: moment().format('YYYY-MM-DD HH:mm:ss'),
       },
-      3 * 24 * 60 * 60,
+      10,
+      'minutes',
     );
     res.status(200).json({
       auth: true,
@@ -112,7 +113,8 @@ export class AuthService {
       });
     }
     await this.redisSession.deleteSession(sid);
-    await this.cookieAuth.removeCookie(response, 'accessToken');
+    await this.cookieAuth.removeCookie(response, 'access_token');
+    await this.cookieAuth.removeCookie(response, 'refresh_token');
     await this.cookieAuth.removeCookie(response, 'sid');
     return;
   }

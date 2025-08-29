@@ -32,6 +32,7 @@ export class JwtHelper {
         return null;
       }
       const session = await this.redisSession.getSession(sid);
+
       if (!session) {
         return null;
       }

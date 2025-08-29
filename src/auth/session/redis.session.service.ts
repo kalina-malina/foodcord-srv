@@ -10,11 +10,18 @@ export class RedisSessionService {
   async setSession(
     sessionId: string,
     userData: any,
-    ttl: number = 86400,
+    time: number,
+    unit: 'minutes' | 'days' = 'minutes',
   ): Promise<void> {
+    let maxAge: number;
+    if (unit === 'days') {
+      maxAge = time * 24 * 60 * 60 * 1000;
+    } else {
+      maxAge = time * 60 * 1000;
+    }
     await this.redisClient.setEx(
       `sess:${sessionId}`,
-      ttl,
+      maxAge,
       JSON.stringify(userData),
     );
   }
