@@ -6,9 +6,11 @@ import { EnvPath } from 'configs/env-path.module';
 import { AuthModule } from './auth/auth.module';
 import { RoleModule } from './role/role.module';
 import { UsersModule } from './users/users.module';
-import { ProductModule } from './product/product.module';
+
 import { DatabaseModule } from 'configs/pg-connect/pg.module';
 import { RedisModule } from 'configs/redis/redis.module';
+import { ProductService } from './product/product.service';
+import { ProductModule } from './product/product.module';
 
 @Module({
   imports: [
@@ -23,7 +25,7 @@ import { RedisModule } from 'configs/redis/redis.module';
     ProductModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [ProductService],
   exports: [],
 })
 export class AppModule {}

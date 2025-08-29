@@ -9,6 +9,7 @@ import useragent from 'express-useragent';
 import { PostgresFactory } from 'configs/pg-connect/pg.service';
 import { RateLimitGuard } from 'configs/guard/rate-limit.guard';
 import { RedisService } from 'configs/redis/redis.service';
+import { LoggerInterceptor } from 'configs/loger/logger-Interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -96,6 +97,7 @@ async function bootstrap() {
   });
 
   const logger = new Logger('Bootstrap');
+  app.useGlobalInterceptors(new LoggerInterceptor(configService)); // kafkaService
   await app.listen(PORT);
   logger.log(`----------------------------------------------------------`);
   logger.log(`-- Swagger ${APP_URL}:${PORT}/api/v2/docs`);
