@@ -1,21 +1,21 @@
 import { Module, Global } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { PostgresFactory } from './pg.service'; // исправил путь
+import { SetFactory } from './pg.service';
 
 @Global()
 @Module({
   imports: [ConfigModule],
   providers: [
     {
-      provide: 'DB_AUTH',
+      provide: 'DB_SET',
       useFactory: async (configService: ConfigService) => {
-        const pool = PostgresFactory.createPool(configService);
-        await PostgresFactory.testConnection();
+        const pool = SetFactory.createPool(configService);
+        await SetFactory.testConnection();
         return pool;
       },
       inject: [ConfigService],
     },
   ],
-  exports: ['DB_AUTH'],
+  exports: ['DB_SET'],
 })
-export class DatabaseModule {}
+export class SetDatabaseModule {}

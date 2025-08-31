@@ -6,10 +6,10 @@ import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
 import { networkInterfaces } from 'os';
 import useragent from 'express-useragent';
-import { PostgresFactory } from 'configs/pg-connect/pg.service';
 import { RateLimitGuard } from 'configs/guard/rate-limit.guard';
 import { RedisService } from 'configs/redis/redis.service';
 import { LoggerInterceptor } from 'configs/loger/logger-Interceptor';
+import { PostgresFactory } from 'configs/pg-connect/foodcord/pg.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

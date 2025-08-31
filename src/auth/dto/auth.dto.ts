@@ -7,6 +7,16 @@ import {
   IsString,
 } from 'class-validator';
 
+export class LoginDtoAuthJWT {
+  @IsEmail()
+  @ApiProperty({ example: 'lebedevvv@volcov.ru' })
+  email: string;
+
+  @IsString()
+  @ApiProperty({ example: 'djF&2Lip' })
+  password: string;
+}
+
 export class RefreshTokenDTO {
   @ApiProperty({
     description: 'Refresh token',
@@ -29,18 +39,6 @@ export class UserDTO {
   role: boolean;
   @IsNumber()
   userId: number;
-}
-
-export class LoginDtoAuthJWT {
-  @IsEmail()
-  @ApiProperty({ example: 'lebedevvv@volcov.ru' })
-  email: string;
-
-  @IsString()
-  @ApiProperty({ example: 'djF&2Lip' })
-  password: string;
-
-  deviceType: 'mobile' | 'web4';
 }
 
 export class RefreshTokenDto {

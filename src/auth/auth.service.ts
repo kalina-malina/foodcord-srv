@@ -1,5 +1,4 @@
 import {
-  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -7,26 +6,28 @@ import {
 import { Request, Response } from 'express';
 import { JwtHelper } from './utils/jwt.helpers';
 import { LoginDtoAuthJWT } from './dto/auth.dto';
-import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 import { CookieAuth } from './utils/cookie.helpers';
 import { randomBytes } from 'crypto';
 import { RedisSessionService } from './session/redis.session.service';
 import moment from 'moment';
+import { DatabaseService } from 'configs/pg-connect/foodcord/orm/grud-postgres.service';
+import { GRUD_OPERATION } from 'configs/pg-connect/foodcord/orm/enum/metod.enum';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtHelper: JwtHelper,
-    @Inject('DB_AUTH') private readonly pool: Pool,
+    private readonly databaseService: DatabaseService,
     private readonly cookieAuth: CookieAuth,
     private readonly redisSession: RedisSessionService,
   ) {}
 
   async login(dto: LoginDtoAuthJWT, req: Request, res: Response) {
     const login = dto.email.toLowerCase().trim();
-    const result = await this.pool.query(
-      `
+    const result = await this.databaseService.executeOperation({
+      operation: GRUD_OPERATION.QUERY,
+      query: `
       SELECT id as "idUser", password_hash as hash
       FROM
           users
@@ -34,8 +35,8 @@ export class AuthService {
           locked = false AND
           LOWER(email) = LOWER($1)
       `,
-      [login],
-    );
+      params: [login],
+    });
 
     if (result.rows.length === 0) {
       throw new NotFoundException({
@@ -114,7 +115,6 @@ export class AuthService {
     }
     await this.redisSession.deleteSession(sid);
     await this.cookieAuth.removeCookie(response, 'access_token');
-    await this.cookieAuth.removeCookie(response, 'refresh_token');
     await this.cookieAuth.removeCookie(response, 'sid');
     return;
   }
