@@ -6,10 +6,10 @@ import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
 import { networkInterfaces } from 'os';
 import useragent from 'express-useragent';
-import { RateLimitGuard } from 'configs/guard/rate-limit.guard';
-import { RedisService } from 'configs/redis/redis.service';
-import { LoggerInterceptor } from 'configs/loger/logger-Interceptor';
-import { PostgresFactory } from 'configs/pg-connect/foodcord/pg.service';
+import { RateLimitGuard } from '@/guard/rate-limit.guard';
+import { RedisService } from '@/redis/redis.service';
+import { LoggerInterceptor } from '@/loger/logger-Interceptor';
+import { PostgresFactory } from '@/pg-connect/foodcord/pg.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -29,6 +29,9 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: false,
       transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
     }),
   );
   app.useGlobalGuards(new RateLimitGuard(app.get(RedisService)));

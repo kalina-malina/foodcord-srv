@@ -11,8 +11,9 @@ import { CookieAuth } from './utils/cookie.helpers';
 import { randomBytes } from 'crypto';
 import { RedisSessionService } from './session/redis.session.service';
 import moment from 'moment';
-import { DatabaseService } from 'configs/pg-connect/foodcord/orm/grud-postgres.service';
-import { GRUD_OPERATION } from 'configs/pg-connect/foodcord/orm/enum/metod.enum';
+import { DatabaseService } from '@/pg-connect/foodcord/orm/grud-postgres.service';
+import { GRUD_OPERATION } from '@/pg-connect/foodcord/orm/enum/metod.enum';
+import { USER_ROLE } from '@/role/enum/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -102,6 +103,8 @@ export class AuthService {
     );
     res.status(200).json({
       auth: true,
+      role: USER_ROLE.ADMIN,
+      store: { idStore: 1, name: 'Молодежный 2' },
     });
   }
 

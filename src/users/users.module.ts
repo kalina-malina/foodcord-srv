@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
-import { DatabaseModule } from 'configs/pg-connect/foodcord/orm/grud-postgres.module';
+import { DatabaseModule } from '@/pg-connect/foodcord/orm/grud-postgres.module';
 
 @Module({
   imports: [DatabaseModule],

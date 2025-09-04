@@ -1,18 +1,25 @@
 import { Module } from '@nestjs/common';
-
 import { ConfigModule } from '@nestjs/config';
-
-import { EnvPath } from 'configs/env-path.module';
+import { EnvPath } from '@/env-path.module';
 import { AuthModule } from './auth/auth.module';
 import { RoleModule } from './role/role.module';
 import { UsersModule } from './users/users.module';
+import { RedisModule } from '@/redis/redis.module';
 
-import { RedisModule } from 'configs/redis/redis.module';
-import { ProductService } from './product/product.service';
-import { ProductModule } from './product/product.module';
-import { SetDatabaseModule } from 'configs/pg-connect/set/pg.module';
-import { PgModule } from 'configs/pg-connect/foodcord/pg.module';
-import { DatabaseModule } from 'configs/pg-connect/foodcord/orm/grud-postgres.module';
+import { SetDatabaseModule } from '@/pg-connect/set/pg.module';
+import { PgModule } from '@/pg-connect/foodcord/pg.module';
+import { DatabaseModule } from '@/pg-connect/foodcord/orm/grud-postgres.module';
+import { ProductOriginslModule } from './product-original/product.module';
+import { ProductCronModule } from './product-original/cron/update-product-cron.module';
+import { GroupOriginalModule } from './group-original/group-original.module';
+import { ProductMainModule } from './product-main/product-main.module';
+import { BannerMainModule } from './banner-main/banner-main.module';
+import { BannerLoyalityModule } from './banner-loyality/banner-loyality.module';
+import { BannerMenuModule } from './banner-menu/banner-menu.module';
+import { GroupsModule } from './groups/groups.module';
+import { ProductIngredientModule } from './product-ingredient/product-ingredient.module';
+import { GroupsSubModule } from './groups-sub/groups-sub.module';
+import { ProductTypeModule } from './product-type/product-type.module';
 
 @Module({
   imports: [
@@ -24,12 +31,21 @@ import { DatabaseModule } from 'configs/pg-connect/foodcord/orm/grud-postgres.mo
     SetDatabaseModule,
     AuthModule,
     RoleModule,
-    RoleModule,
     UsersModule,
-    ProductModule,
+    GroupOriginalModule,
+    GroupsSubModule,
+    GroupsModule,
+    ProductMainModule,
+    ProductIngredientModule,
+    ProductTypeModule,
+    ProductOriginslModule,
+    ProductCronModule,
+    BannerMainModule,
+    BannerLoyalityModule,
+    BannerMenuModule,
   ],
   controllers: [],
-  providers: [ProductService],
+  providers: [],
   exports: [],
 })
 export class AppModule {}
