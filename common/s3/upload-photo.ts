@@ -16,7 +16,7 @@ export class UploadPhotoService {
     path: S3_PATCH_ENUM,
     name: string,
   ) {
-    let urlImage = null;
+    let urlFile = null;
     if (file) {
       const bucketName = this.configService.get('S3_BUCKET_NAME');
       if (!bucketName) {
@@ -24,33 +24,51 @@ export class UploadPhotoService {
       }
       const fullPath = `foodcourt/${path}/`;
 
-      const fileName = `${name}.webp`;
+      // Определяем тип файла по MIME типу
+      const isVideo = file.mimetype.startsWith('video/');
+      const fileName = isVideo ? `${name}.webm` : `${name}.webp`;
 
       await this.s3Storage.deleteFile(bucketName, fullPath + fileName);
 
-      const coverWebpBuffer = await sharp(file.buffer)
-        .webp({ quality: 90, lossless: true })
-        .toBuffer();
+      if (isVideo) {
+        // Для видео - сохраняем оригинальный буфер без обработки Sharp
+        await this.s3Storage.uploadFile(
+          bucketName,
+          fullPath + fileName,
+          file.buffer,
+          'video/webm',
+        );
+      } else {
+        // Для изображений - конвертируем в WebP через Sharp
+        const coverWebpBuffer = await sharp(file.buffer)
+          .webp({ quality: 90, lossless: true })
+          .toBuffer();
 
-      await this.s3Storage.uploadFile(
-        bucketName,
-        fullPath + fileName,
-        coverWebpBuffer,
-        'image/webp',
-      );
-      urlImage = `https://${this.configService.get('S3_BUCKET_ID')}.selstorage.ru/${fullPath}${fileName}`;
+        await this.s3Storage.uploadFile(
+          bucketName,
+          fullPath + fileName,
+          coverWebpBuffer,
+          'image/webp',
+        );
+      }
+
+      urlFile = `https://${this.configService.get('S3_BUCKET_ID')}.selstorage.ru/${fullPath}${fileName}`;
     }
-    return urlImage;
+    return urlFile;
   }
 
-  async deletePhoto(path: S3_PATCH_ENUM, name: string) {
+  async deletePhoto(
+    path: S3_PATCH_ENUM,
+    name: string,
+    isVideo: boolean = false,
+  ) {
     const bucketName = this.configService.get('S3_BUCKET_NAME');
     if (!bucketName) {
       throw new Error('Ошибка сервера: Отсутствуют настройки S3');
     }
     try {
       const fullPath = `foodcourt/${path}/`;
-      const fileName = `${name}.webp`;
+      const fileName = isVideo ? `${name}.webm` : `${name}.webp`;
       await this.s3Storage.deleteFile(bucketName, fullPath + fileName);
       return true;
     } catch {

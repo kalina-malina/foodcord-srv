@@ -14,7 +14,6 @@ export class UpdateBannerMainDto extends PartialType(CreateBannerMainDto) {
     if (Array.isArray(value)) {
       return value;
     }
-    // Если это число (не строка)
     if (typeof value === 'number') {
       return [value];
     }
@@ -28,7 +27,6 @@ export class UpdateBannerMainDto extends PartialType(CreateBannerMainDto) {
         }
       }
 
-      // Если это строка вида "1,2,3"
       return value
         .split(',')
         .map((item: string) => {

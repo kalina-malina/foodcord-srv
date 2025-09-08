@@ -1,28 +1,263 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadGatewayException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateBannerLoyalityDto } from './dto/create-banner-loyality.dto';
 import { UpdateBannerLoyalityDto } from './dto/update-banner-loyality.dto';
+import { GRUD_OPERATION } from '@/pg-connect/foodcord/orm/enum/metod.enum';
+import { S3_PATCH_ENUM } from '@/s3/enum/s3.pach.enum';
+import { transformName } from '@/utils/transform-name';
+import { DatabaseService } from '@/pg-connect/foodcord/orm/grud-postgres.service';
+import { UploadPhotoService } from '@/s3/upload-photo';
+import { PoolClient } from 'pg';
 
 @Injectable()
 export class BannerLoyalityService {
-  create(createBannerLoyalityDto: CreateBannerLoyalityDto) {
-    void createBannerLoyalityDto;
-    return 'This action adds a new bannerLoyality';
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private uploadPhotoService: UploadPhotoService,
+  ) {}
+
+  async create(createBannerMainDto: CreateBannerLoyalityDto): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    let result = null;
+
+    const NameBanner = transformName(createBannerMainDto.name);
+
+    result = await this.databaseService.executeOperation({
+      operation: GRUD_OPERATION.QUERY,
+      query: 'SELECT name FROM banner_loyality WHERE LOWER(name) = LOWER($1)',
+      params: [NameBanner],
+    });
+    if (result && result.rows.length > 0) {
+      throw new ConflictException(
+        'Ошибка при создании баннера, страница ввода номера телефона: похожее название уже существует',
+      );
+    }
+
+    const { file, ...bannerData } = createBannerMainDto;
+    void file;
+    const transaction: PoolClient =
+      await this.databaseService.beginTransaction();
+    try {
+      result = await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.INSERT,
+        table_name: 'banner_loyality',
+        conflict: ['name'],
+        data: [{ ...bannerData, name: NameBanner }],
+        transaction: transaction,
+      });
+      if (result && result.length > 0) {
+        let urlFile = null;
+        if (createBannerMainDto.file) {
+          const isVideo =
+            createBannerMainDto.file.mimetype.startsWith('video/');
+          const s3Path = isVideo
+            ? S3_PATCH_ENUM.BANNER_LOYALTY_VIDEO
+            : S3_PATCH_ENUM.BANNER_LOYALTY_IMAGE;
+
+          urlFile = await this.uploadPhotoService.uploadPhoto(
+            createBannerMainDto.file,
+            s3Path,
+            result[0].id,
+          );
+
+          result = await this.databaseService.executeOperation({
+            operation: GRUD_OPERATION.UPDATE,
+            table_name: 'banner_loyality',
+            conflict: ['id'],
+            columnUpdate: ['url', 'type'],
+            data: [
+              {
+                id: result[0].id,
+                url: urlFile,
+                type: isVideo ? 'video' : 'image',
+              },
+            ],
+            transaction: transaction,
+          });
+        }
+
+        await this.databaseService.commitTransaction(transaction);
+        return {
+          success: true,
+          message: `Баннер ${result[0].name}, успешно создан, страница ввода номера телефона`,
+        };
+      } else {
+        throw new Error(
+          'Ошибка при создании баннера, страница ввода номера телефона',
+        );
+      }
+    } catch (error: any) {
+      await this.databaseService.rollbackTransaction(transaction);
+      throw new BadGatewayException(error.message);
+    } finally {
+      await this.databaseService.releaseClient(transaction);
+    }
   }
 
-  findAll() {
-    return `This action returns all bannerLoyality`;
+  async findAll() {
+    try {
+      const result = await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query:
+          'SELECT id::int,seconds,url, type FROM banner_loyality ORDER BY id DESC',
+        params: [],
+      });
+      return {
+        success: true,
+        data: result.rows,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: `Ошибка при получении списка баннеров, страница ввода номера телефона: ${error.message}`,
+      };
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} bannerLoyality`;
+  async findOne(id: number) {
+    try {
+      const result = await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query:
+          'SELECT id::int,seconds,url, type FROM banner_loyality WHERE id = $1',
+        params: [id],
+      });
+
+      if (result.rows.length === 0) {
+        return {
+          success: false,
+          message: 'Баннер не найден, страница ввода номера телефона',
+        };
+      }
+
+      return {
+        success: true,
+        data: result.rows[0],
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: `Ошибка при получении баннера, страница ввода номера телефона: ${error.message}`,
+      };
+    }
   }
 
-  update(id: number, updateBannerLoyalityDto: UpdateBannerLoyalityDto) {
-    void updateBannerLoyalityDto;
-    return `This action updates a #${id} bannerLoyality`;
+  async update(id: number, updateBannerLoyalityDto: UpdateBannerLoyalityDto) {
+    let result = null;
+    const transaction: PoolClient =
+      await this.databaseService.beginTransaction();
+
+    try {
+      const existingBanner = await this.findOne(id);
+      if (!existingBanner.success) {
+        await this.databaseService.rollbackTransaction(transaction);
+        throw new NotFoundException(existingBanner.message);
+      }
+
+      if (updateBannerLoyalityDto.name) {
+        const NameBanner = transformName(updateBannerLoyalityDto.name);
+
+        result = await this.databaseService.executeOperation({
+          operation: GRUD_OPERATION.QUERY,
+          query:
+            'SELECT name FROM banner_loyality WHERE LOWER(name) = LOWER($1) AND id != $2',
+          params: [NameBanner, id],
+          transaction: transaction,
+        });
+
+        if (result && result.rows.length > 0) {
+          await this.databaseService.rollbackTransaction(transaction);
+          throw new ConflictException(
+            'Баннер страницы ввода номера телефона с таким названием уже существует',
+          );
+        }
+
+        updateBannerLoyalityDto.name = NameBanner;
+      }
+      const { file, ...updateData } = updateBannerLoyalityDto;
+
+      if (Object.keys(updateData).length > 0) {
+        result = await this.databaseService.executeOperation({
+          operation: GRUD_OPERATION.UPDATE,
+          table_name: 'banner_loyality',
+          conflict: ['id'],
+          columnUpdate: ['name', 'seconds', 'is_active', 'store'],
+          data: [{ id, ...updateData }],
+          transaction: transaction,
+        });
+      }
+      if (file) {
+        const isVideo = file.mimetype.startsWith('video/');
+        const s3Path = isVideo
+          ? S3_PATCH_ENUM.BANNER_MAIN_VIDEO
+          : S3_PATCH_ENUM.BANNER_MAIN_IMAGE;
+
+        const urlFile = await this.uploadPhotoService.uploadPhoto(
+          file,
+          s3Path,
+          id.toString(),
+        );
+
+        result = await this.databaseService.executeOperation({
+          operation: GRUD_OPERATION.UPDATE,
+          table_name: 'banner_loyality',
+          conflict: ['id'],
+          columnUpdate: ['url', 'type'],
+          data: [
+            {
+              id: id,
+              url: urlFile,
+              type: isVideo ? 'video' : 'image',
+            },
+          ],
+          transaction: transaction,
+        });
+      }
+
+      await this.databaseService.commitTransaction(transaction);
+      return {
+        success: true,
+        data: result,
+        message: 'Баннер страницы ввода номера телефона успешно обновлен',
+      };
+    } catch (error: any) {
+      await this.databaseService.rollbackTransaction(transaction);
+      throw new BadGatewayException(error.message);
+    } finally {
+      await this.databaseService.releaseClient(transaction);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} bannerLoyality`;
+  async remove(id: number) {
+    try {
+      const existingBanner = await this.findOne(id);
+      if (!existingBanner.success) {
+        return existingBanner;
+      }
+
+      const result = await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.DELETE,
+        table_name: 'banner_loyality',
+        conflict: ['id'],
+        data: [{ id }],
+      });
+      this.uploadPhotoService.deletePhotoByPath(result[0].url);
+
+      return {
+        success: true,
+        message: 'Баннер страницы ввода номера телефона успешно удален',
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: `Ошибка при удалении баннера страницы ввода номера телефона: ${error.message}`,
+      };
+    }
   }
 }

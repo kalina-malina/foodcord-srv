@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -14,6 +15,7 @@ import moment from 'moment';
 import { DatabaseService } from '@/pg-connect/foodcord/orm/grud-postgres.service';
 import { GRUD_OPERATION } from '@/pg-connect/foodcord/orm/enum/metod.enum';
 import { USER_ROLE } from '@/role/enum/role.enum';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +24,7 @@ export class AuthService {
     private readonly databaseService: DatabaseService,
     private readonly cookieAuth: CookieAuth,
     private readonly redisSession: RedisSessionService,
+    private readonly configService: ConfigService,
   ) {}
 
   async login(dto: LoginDtoAuthJWT, req: Request, res: Response) {
@@ -54,7 +57,13 @@ export class AuthService {
         message: 'Не верный пароль',
       });
     }
-    await this.redisSession.getUserSessionsAndLimit(user.idUser, 2);
+    const maxSessions = this.configService.getOrThrow('MAX_SESSIONS');
+    if (!maxSessions) {
+      throw new BadRequestException(
+        'Походу на сервере критическая ошибка в настройках',
+      );
+    }
+    await this.redisSession.getUserSessionsAndLimit(user.idUser, maxSessions);
 
     const device = req.useragent?.isMobile
       ? 'Mobile'
