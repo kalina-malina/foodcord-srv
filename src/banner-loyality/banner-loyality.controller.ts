@@ -6,12 +6,17 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { BannerLoyalityService } from './banner-loyality.service';
 import { CreateBannerLoyalityDto } from './dto/create-banner-loyality.dto';
 import { UpdateBannerLoyalityDto } from './dto/update-banner-loyality.dto';
+import { JwtAuthGuard } from '@/auth/guards/auth.guard';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('banner-loyality')
+@ApiTags('Баннеры лояльности')
+@UseGuards(JwtAuthGuard)
 export class BannerLoyalityController {
   constructor(private readonly bannerLoyalityService: BannerLoyalityService) {}
 

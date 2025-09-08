@@ -5,6 +5,7 @@ import {
   Body,
   UseInterceptors,
   UploadedFiles,
+  UseGuards,
 } from '@nestjs/common';
 import { ProductMainService } from './product-main.service';
 import { CreateProductMainDto } from './dto/create-product-main.dto';
@@ -18,9 +19,11 @@ import {
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { multerImageOptions } from '@/s3/multer.config';
 import { ResponseProductMainDto } from './dto/response-product-main.dto';
+import { JwtAuthGuard } from '@/auth/guards/auth.guard';
 
 @ApiTags('Продукты для отображения на устройстве')
 @Controller('product-main')
+@UseGuards(JwtAuthGuard)
 export class ProductMainController {
   constructor(private readonly productMainService: ProductMainService) {}
 

@@ -8,6 +8,7 @@ import {
   Delete,
   UseInterceptors,
   UploadedFiles,
+  UseGuards,
 } from '@nestjs/common';
 import { GroupsService } from './groups.service';
 import { CreateGroupDto } from './dto/create-group.dto';
@@ -15,9 +16,11 @@ import { UpdateGroupDto } from './dto/update-group.dto';
 import { ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { multerImageOptions } from '@/s3/multer.config';
+import { JwtAuthGuard } from '@/auth/guards/auth.guard';
 
 @Controller('groups')
 @ApiTags('Кастомные группы(отображение в меню на устройстве)')
+@UseGuards(JwtAuthGuard)
 export class GroupsController {
   constructor(private readonly groupsService: GroupsService) {}
 

@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { UsersController } from './users.controller';
+import { StoresService } from './stores.service';
+import { StoresController } from './stores.controller';
 import { DatabaseModule } from '@/pg-connect/foodcord/orm/grud-postgres.module';
 import { AuthModule } from '@/auth/auth.module';
 
 @Module({
   imports: [DatabaseModule, AuthModule],
-  controllers: [UsersController],
-  providers: [UsersService],
+  controllers: [StoresController],
+  providers: [StoresService],
 })
-export class UsersModule {}
+export class StoresModule {}

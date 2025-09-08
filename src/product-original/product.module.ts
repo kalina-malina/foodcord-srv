@@ -7,6 +7,7 @@ import { DatabaseModule } from '@/pg-connect/foodcord/orm/grud-postgres.module';
 import { SetDatabaseModule } from '@/pg-connect/set/pg.module';
 import { ProductCronModule } from './cron/update-product-cron.module';
 import { S3Module } from '@/s3/s3.module';
+import { AuthModule } from '@/auth/auth.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { S3Module } from '@/s3/s3.module';
     ProductCronModule,
     DatabaseModule,
     S3Module,
+    AuthModule,
   ],
   controllers: [ProductOriginslController],
   providers: [ProductOriginslService],

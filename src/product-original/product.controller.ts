@@ -7,6 +7,7 @@ import {
   UseInterceptors,
   Query,
   UploadedFiles,
+  UseGuards,
 } from '@nestjs/common';
 import { ProductOriginslService } from './product.service';
 import { UpdateProductOriginslDto } from './dto/update-product.dto';
@@ -25,9 +26,11 @@ import {
   ResponseUpdateInfoProductOriginalDto,
   ResponseUpdateProductOriginalDto,
 } from './dto/response-product-original.dto';
+import { JwtAuthGuard } from '@/auth/guards/auth.guard';
 
 @ApiTags('Продукты из сетретейл ')
-@Controller('product-originsl')
+@Controller('product-original')
+@UseGuards(JwtAuthGuard)
 export class ProductOriginslController {
   constructor(
     private readonly productOriginslService: ProductOriginslService,

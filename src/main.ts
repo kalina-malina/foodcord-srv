@@ -22,7 +22,7 @@ async function bootstrap() {
     'localhost';
   app.use(useragent.express());
   await PostgresFactory.initAuthTables();
-  app.setGlobalPrefix('api/v2/');
+  app.setGlobalPrefix('foodcord/api/v1/');
   app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({

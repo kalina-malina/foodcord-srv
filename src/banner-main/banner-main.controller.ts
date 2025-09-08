@@ -8,6 +8,7 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  UseGuards,
 } from '@nestjs/common';
 import { BannerMainService } from './banner-main.service';
 import { CreateBannerMainDto } from './dto/create-banner-main.dto';
@@ -15,9 +16,11 @@ import { UpdateBannerMainDto } from './dto/update-banner-main.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerUniversalOptions } from '@/s3/multer.config';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '@/auth/guards/auth.guard';
 
 @ApiTags('Баннеры стартового экрана')
 @Controller('banner-main')
+@UseGuards(JwtAuthGuard)
 export class BannerMainController {
   constructor(private readonly bannerMainService: BannerMainService) {}
 

@@ -6,14 +6,17 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { GroupsSubService } from './groups-sub.service';
 import { CreateGroupSubDto } from './dto/create-groups-sub.dto';
 import { UpdateGroupSubDto } from './dto/groups-sub.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '@/auth/guards/auth.guard';
 
 @Controller('groups-sub')
 @ApiTags('Подгруппы(теги в меню)')
+@UseGuards(JwtAuthGuard)
 export class GroupsSubController {
   constructor(private readonly groupsService: GroupsSubService) {}
 

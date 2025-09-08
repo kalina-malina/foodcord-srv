@@ -6,12 +6,17 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { BannerMenuService } from './banner-menu.service';
 import { CreateBannerMenuDto } from './dto/create-banner-menu.dto';
 import { UpdateBannerMenuDto } from './dto/update-banner-menu.dto';
+import { JwtAuthGuard } from '@/auth/guards/auth.guard';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('banner-menu')
+@ApiTags('Баннеры меню')
+@UseGuards(JwtAuthGuard)
 export class BannerMenuController {
   constructor(private readonly bannerMenuService: BannerMenuService) {}
 

@@ -20,6 +20,7 @@ import { GroupsModule } from './groups/groups.module';
 import { ProductIngredientModule } from './product-ingredient/product-ingredient.module';
 import { GroupsSubModule } from './groups-sub/groups-sub.module';
 import { ProductTypeModule } from './product-type/product-type.module';
+import { StoresModule } from './stores/stores.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { ProductTypeModule } from './product-type/product-type.module';
     BannerMainModule,
     BannerLoyalityModule,
     BannerMenuModule,
+    StoresModule,
   ],
   controllers: [],
   providers: [],
