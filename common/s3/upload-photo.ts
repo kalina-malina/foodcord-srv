@@ -24,14 +24,12 @@ export class UploadPhotoService {
       }
       const fullPath = `foodcourt/${path}/`;
 
-      // Определяем тип файла по MIME типу
       const isVideo = file.mimetype.startsWith('video/');
       const fileName = isVideo ? `${name}.webm` : `${name}.webp`;
 
       await this.s3Storage.deleteFile(bucketName, fullPath + fileName);
 
       if (isVideo) {
-        // Для видео - сохраняем оригинальный буфер без обработки Sharp
         await this.s3Storage.uploadFile(
           bucketName,
           fullPath + fileName,
@@ -39,7 +37,6 @@ export class UploadPhotoService {
           'video/webm',
         );
       } else {
-        // Для изображений - конвертируем в WebP через Sharp
         const coverWebpBuffer = await sharp(file.buffer)
           .webp({ quality: 90, lossless: true })
           .toBuffer();
