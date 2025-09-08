@@ -40,7 +40,6 @@
   "include": [
     "src/**/*.ts",
     "common/**/*",
-    "configs/**/*.ts",
     "types/**/*.d.ts",
     "**/*.spec.ts",
     "**/*.test.ts",

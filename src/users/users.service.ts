@@ -6,8 +6,8 @@ import {
 import { createUserDTO } from './dto/create-user.dto';
 import { generateSecurePassword } from './utils/generate-pass.utils';
 import * as bcrypt from 'bcrypt';
-import { DatabaseService } from 'configs/pg-connect/foodcord/orm/grud-postgres.service';
-import { GRUD_OPERATION } from 'configs/pg-connect/foodcord/orm/enum/metod.enum';
+import { DatabaseService } from '@/pg-connect/foodcord/orm/grud-postgres.service';
+import { GRUD_OPERATION } from '@/pg-connect/foodcord/orm/enum/metod.enum';
 
 @Injectable()
 export class UsersService {
