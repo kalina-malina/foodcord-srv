@@ -21,7 +21,7 @@ export class ProductMainService {
   }> {
     const {
       name,
-      visualType,
+      variant,
       groups,
       subgroups,
 
@@ -37,7 +37,7 @@ export class ProductMainService {
 
     if (
       !name ||
-      !visualType ||
+      !variant ||
       !description ||
       !image ||
       !composition ||
@@ -62,7 +62,7 @@ export class ProductMainService {
         conflict: ['name'],
         columnUpdate: [
           'name',
-          'visual_type',
+          'variant',
           'description',
           'groups',
           'subgroups',
@@ -77,7 +77,7 @@ export class ProductMainService {
         data: [
           {
             name,
-            visual_type: visualType,
+            variant: variant,
             description,
             groups,
             subgroups,
@@ -143,11 +143,12 @@ export class ProductMainService {
 
   async findAll() {
     const query = `
-          SELECT
+         SELECT
           pm.id::int,
           pm.name,
           pm.image,
-          pm.visual_type,
+          pm.variant,
+          pm.color,
           COALESCE(
               JSONB_AGG(
                   DISTINCT JSONB_BUILD_OBJECT(
@@ -164,23 +165,28 @@ export class ProductMainService {
           COALESCE(
               JSONB_AGG(
                   DISTINCT JSONB_BUILD_OBJECT(
-                      'id', ing.id,
-                      'name', ing.name,
-                      'price', ing.price
+                      'id', ext.id,
+                      'name', ext.name,
+                      'price', ext.price
                   )
-              ) FILTER (WHERE ing.id IS NOT NULL),
+              ) FILTER (WHERE ext.id IS NOT NULL),
               '[]'::jsonb
+          ) AS extras,
+            COALESCE(
+              ARRAY_AGG(DISTINCT ing.name) FILTER (WHERE ing.id IS NOT NULL),
+              '{}'::text[]
           ) AS ingredients,
           COALESCE(
               JSONB_AGG(
                   DISTINCT JSONB_BUILD_OBJECT(
                       'id', typ.id,
                       'name', typ.name,
-                      'price', typ.price
+                      'price', typ.price,
+                      'weight', typ.weight
                   )
               ) FILTER (WHERE typ.id IS NOT NULL),
               '[]'::jsonb
-          ) AS types,
+          ) AS type,
               JSONB_BUILD_OBJECT(
               'composition', pm.composition,
               'description', pm.description,
@@ -191,13 +197,14 @@ export class ProductMainService {
           ) AS information
       FROM products_main pm
       LEFT JOIN groups po ON po.id = ANY(pm.groups)
-      LEFT JOIN products_original typ ON po.id = ANY(pm.groups) and typ.type = 'size'
-      LEFT JOIN products_original ing ON po.id = ANY(pm.groups) and ing.type = 'ingridients'
+      LEFT JOIN products_original typ ON po.id = ANY(pm.groups) and typ.type = 'type'
+      LEFT JOIN products_original ext ON po.id = ANY(pm.groups) and ext.type = 'extras'
       LEFT JOIN products_main inf ON inf.id = pm.id
+      LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
       GROUP BY
           pm.id, pm.name, pm.image, pm.composition, pm.description,
           pm.fats, pm.proteins, pm.carbohydrates, pm.calories,
-          pm.visual_type, pm.groups, pm.subgroups;
+          pm.variant, pm.groups, pm.subgroups;
     `;
 
     const result = await this.databaseService.executeOperation({

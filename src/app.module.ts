@@ -17,10 +17,12 @@ import { BannerMainModule } from './banner-main/banner-main.module';
 import { BannerLoyalityModule } from './banner-loyality/banner-loyality.module';
 import { BannerMenuModule } from './banner-menu/banner-menu.module';
 import { GroupsModule } from './groups/groups.module';
-import { ProductIngredientModule } from './product-ingredient/product-ingredient.module';
+import { ProductExtrasModule } from './product-extras/product-extras.module';
 import { GroupsSubModule } from './groups-sub/groups-sub.module';
 import { ProductTypeModule } from './product-type/product-type.module';
 import { StoresModule } from './stores/stores.module';
+import { ProductIngridientsModule } from './product-ingridients/product-ingridients.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -37,7 +39,7 @@ import { StoresModule } from './stores/stores.module';
     GroupsSubModule,
     GroupsModule,
     ProductMainModule,
-    ProductIngredientModule,
+    ProductExtrasModule,
     ProductTypeModule,
     ProductOriginslModule,
     ProductCronModule,
@@ -45,6 +47,8 @@ import { StoresModule } from './stores/stores.module';
     BannerLoyalityModule,
     BannerMenuModule,
     StoresModule,
+    ProductIngridientsModule,
+    OrdersModule,
   ],
   controllers: [],
   providers: [],

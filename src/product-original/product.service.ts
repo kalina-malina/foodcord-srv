@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { UpdateProductOriginslDto } from './dto/update-product.dto';
 import { DatabaseService } from '@/pg-connect/foodcord/orm/grud-postgres.service';
 import { GRUD_OPERATION } from '@/pg-connect/foodcord/orm/enum/metod.enum';
 import { S3_PATCH_ENUM } from '@/s3/enum/s3.pach.enum';
 import { UploadPhotoService } from '@/s3/upload-photo';
+import { TYPE_PRODUCT_ENUM } from './enum/type-prodict.enum';
 
 @Injectable()
 export class ProductOriginslService {
@@ -36,6 +37,15 @@ export class ProductOriginslService {
     idProduct: number,
     createProductDto: UpdateProductOriginslDto,
   ) {
+    if (
+      !createProductDto.weight &&
+      createProductDto.type === TYPE_PRODUCT_ENUM.TYPE
+    ) {
+      throw new BadRequestException(
+        'Вес продукта не может быть пустым для создания типа продукта',
+      );
+    }
+
     let urlImage = null;
     if (createProductDto.image) {
       urlImage = await this.uploadPhotoService.uploadPhoto(
