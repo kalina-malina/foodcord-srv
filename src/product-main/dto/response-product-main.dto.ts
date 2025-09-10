@@ -1,42 +1,52 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { VARIANT_PRODUCT_ENUM } from '../enum/main.product.enum';
 
 export class ProductTypeDto {
-  @ApiProperty({ description: 'ID типа продукта', example: 1 })
+  @ApiProperty({ description: 'ID типа продукта', example: 2 })
   id: number;
 
-  @ApiProperty({ description: 'Название типа', example: '25 см' })
+  @ApiProperty({ description: 'Название типа', example: '45' })
   name: string;
 
-  @ApiProperty({ description: 'Цена типа', example: 399.9 })
+  @ApiProperty({ description: 'Цена типа', example: 0 })
   price: number;
+
+  @ApiProperty({ description: 'Вес типа', example: null, nullable: true })
+  weight: number | null;
 }
 
-export class IngredientDto {
-  @ApiProperty({ description: 'ID ингредиента', example: 1 })
+export class ProductGroupDto {
+  @ApiProperty({ description: 'ID группы', example: 1 })
   id: number;
 
-  @ApiProperty({ description: 'Название ингредиента', example: 'Пепперони' })
+  @ApiProperty({ description: 'Название группы', example: 'лимонад' })
   name: string;
+}
+
+export class ProductExtraDto {
+  @ApiProperty({ description: 'ID дополнения', example: 4 })
+  id: number;
 
   @ApiProperty({
-    description: 'Описание ингредиента',
-    example: 'Острая колбаска',
+    description: 'Название дополнения',
+    example: 'gthxbr xbkb',
+    nullable: true,
   })
-  description: string;
+  name: string | null;
 
-  @ApiProperty({ description: 'Цена ингредиента', example: 90 })
+  @ApiProperty({ description: 'Цена дополнения', example: 0 })
   price: number;
-
-  @ApiProperty({
-    description: 'Изображение ингредиента',
-    example: 'https://example.com/ingredient.jpg',
-  })
-  image: string;
 }
 
 export class ProductInformationDto {
-  @ApiProperty({ description: 'ID информации о продукте', example: 1 })
-  id: number;
+  @ApiProperty({ description: 'Жиры (г)', example: 8 })
+  fats: number;
+
+  @ApiProperty({ description: 'Калории', example: 270 })
+  calories: number;
+
+  @ApiProperty({ description: 'Белки (г)', example: 11 })
+  proteins: number;
 
   @ApiProperty({
     description: 'Состав продукта',
@@ -46,22 +56,12 @@ export class ProductInformationDto {
 
   @ApiProperty({
     description: 'Описание продукта',
-    example:
-      'Классическая итальянская пицца с ароматным томатным соусом и свежим базиликом.',
+    example: 'Классическая итальянская пицца',
   })
   description: string;
 
-  @ApiProperty({ description: 'Жиры (г)', example: 8 })
-  fats: number;
-
-  @ApiProperty({ description: 'Белки (г)', example: 11 })
-  proteins: number;
-
   @ApiProperty({ description: 'Углеводы (г)', example: 32 })
   carbohydrates: number;
-
-  @ApiProperty({ description: 'Калории', example: 270 })
-  calories: number;
 }
 
 export class ResponseProductMainDto {
@@ -73,38 +73,51 @@ export class ResponseProductMainDto {
 
   @ApiProperty({
     description: 'Изображение продукта',
-    example: 'https://example.com/pizza.jpg',
+    example:
+      'https://cs.pikabu.ru/post_img/2013/04/05/11/1365183909_433145377.jpg',
   })
   image: string;
 
-  @ApiProperty({ description: 'Базовая цена продукта', example: 399.9 })
-  price: number;
+  @ApiProperty({
+    description: 'Варианты продукта',
+    example: VARIANT_PRODUCT_ENUM.BIG,
+  })
+  variant: string;
+
+  @ApiProperty({ description: 'Цвет продукта', example: null, nullable: true })
+  color: string | null;
 
   @ApiProperty({
     description: 'Группы продукта',
-    example: [1, 4],
-    type: [Number],
+    type: [ProductGroupDto],
   })
-  group: number[];
+  groups: ProductGroupDto[];
 
   @ApiProperty({
     description: 'Подгруппы продукта',
-    example: ['Классика'],
+    example: ['лимонад', 'вапва'],
     type: [String],
   })
   subgroup: string[];
 
   @ApiProperty({
-    description: 'Типы продукта (размеры)',
-    type: [ProductTypeDto],
+    description: 'Дополнения продукта',
+    type: [ProductExtraDto],
   })
-  types: ProductTypeDto[];
+  extras: ProductExtraDto[];
 
   @ApiProperty({
     description: 'Ингредиенты продукта',
-    type: [IngredientDto],
+    example: ['песок'],
+    type: [String],
   })
-  ingredients: IngredientDto[];
+  ingredients: string[];
+
+  @ApiProperty({
+    description: 'Типы продукта (размеры)',
+    type: [ProductTypeDto],
+  })
+  type: ProductTypeDto[];
 
   @ApiProperty({
     description: 'Информация о продукте',

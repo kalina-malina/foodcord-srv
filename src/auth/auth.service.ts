@@ -83,6 +83,9 @@ export class AuthService {
 
     const sid = randomBytes(32).toString('hex');
 
+    const refreshTokenTTL =
+      this.configService.get('JWT_REFRESH_EXPIRES_IN') || '7d';
+
     await this.cookieAuth.setCookie(
       res,
       'access_token',
@@ -94,21 +97,19 @@ export class AuthService {
       res,
       'sid',
       sid,
-      10,
-      'minutes',
+      refreshTokenTTL,
     );
 
     await this.redisSession.setSession(
       sid,
       {
-        userId: user.idUser,
+        userId: +user.idUser,
         refreshToken: refreshToken,
         expiresAt: expiresAt,
         divase: device,
         createAt: moment().format('YYYY-MM-DD HH:mm:ss'),
       },
-      10,
-      'minutes',
+      refreshTokenTTL,
     );
     res.status(200).json({
       auth: true,
