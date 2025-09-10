@@ -16,7 +16,7 @@ export class ProductTypeService {
         operation: GRUD_OPERATION.QUERY,
         query:
           'SELECT id::int, name,image FROM products_original WHERE type = $1',
-        params: [TYPE_PRODUCT_ENUM.SIZE_PRODUCT],
+        params: [TYPE_PRODUCT_ENUM.TYPE],
       });
       if (result.rows.length === 0) {
         throw new NotFoundException('Типы продуктов не найдены');
@@ -38,7 +38,7 @@ export class ProductTypeService {
         operation: GRUD_OPERATION.QUERY,
         query:
           'SELECT id::int, name, image FROM products_original WHERE type = $1 AND id = $2',
-        params: [TYPE_PRODUCT_ENUM.SIZE_PRODUCT, id],
+        params: [TYPE_PRODUCT_ENUM.TYPE, id],
       });
       if (result.rows.length === 0) {
         throw new NotFoundException('Тип продукта не найден');

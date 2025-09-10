@@ -5,9 +5,11 @@ import {
   IsArray,
   IsOptional,
   ValidateNested,
+  IsEnum,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { VARIANT_PRODUCT_ENUM } from '../enum/main.product.enum';
 
 export class CreateProductMainDto {
   @ApiProperty({ description: 'Название продукта', example: 'Пицца Маргарита' })
@@ -30,20 +32,12 @@ export class CreateProductMainDto {
   @IsNotEmpty()
   description: string;
 
-  @ApiProperty({ description: 'Теги Отображения продукта', example: [1, 4] })
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      try {
-        return JSON.parse(value);
-      } catch {
-        return value.split(',').map((item: string) => parseInt(item.trim()));
-      }
-    }
-    return value;
+  @ApiProperty({
+    description: 'Вариант отображения продукта',
+    example: VARIANT_PRODUCT_ENUM.BIG,
   })
-  @IsArray()
-  @IsNumber({}, { each: true })
-  visualType: number[];
+  @IsEnum(VARIANT_PRODUCT_ENUM)
+  variant: VARIANT_PRODUCT_ENUM;
 
   @ApiProperty({ description: 'Группы продукта', example: [1, 4] })
   @Transform(({ value }) => {
@@ -150,6 +144,10 @@ export class CreateProductMainDto {
   })
   @IsNumber()
   calories: number;
+
+  @ApiProperty({ description: 'Вес продукта ' })
+  @IsString()
+  colors: string;
 }
 
 export class CreateProductTypeDto {
@@ -192,7 +190,11 @@ export class CreateIngredientDto {
   @ApiProperty({ description: 'Изображение ингредиента' })
   @IsOptional()
   @IsString()
-  image?: string;
+  image: string;
+
+  @ApiProperty({ description: 'Цвета подложки фото продукта' })
+  @IsString()
+  colors: string;
 }
 
 export class CreateProductInformationDto {

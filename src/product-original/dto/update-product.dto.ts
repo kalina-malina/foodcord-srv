@@ -14,7 +14,7 @@ export class UpdateProductOriginslDto {
   @ApiProperty({ description: 'Описание' })
   @IsString()
   @IsNotEmpty()
-  description?: string;
+  description: string;
 
   @ApiProperty({
     type: 'string',
@@ -31,7 +31,12 @@ export class UpdateProductOriginslDto {
   @ApiProperty({
     description: `Тип продукта: ${Object.values(TYPE_PRODUCT_ENUM_VALUE).join(' или ')}`,
   })
-  @IsString()
   @IsEnum(TYPE_PRODUCT_ENUM)
+  @IsNotEmpty()
   type: TYPE_PRODUCT_ENUM;
+
+  @ApiProperty({ description: 'Вес продукта' })
+  @IsNumber()
+  @IsNotEmpty()
+  weight: number;
 }

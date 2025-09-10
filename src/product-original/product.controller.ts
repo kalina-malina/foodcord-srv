@@ -38,7 +38,10 @@ export class ProductOriginslController {
   ) {}
 
   @Get('update-product-set')
-  @ApiOperation({ summary: 'Обновление продуктов из сетритейла' })
+  @ApiOperation({
+    summary: 'Обновление продуктов из сетритейла',
+    description: 'Обновление продуктов из сетритейла',
+  })
   @ApiResponse({ type: ResponseUpdateProductOriginalDto })
   async updateProductAll() {
     return await this.updateProductAllCron.getAllOriginslProducts();
