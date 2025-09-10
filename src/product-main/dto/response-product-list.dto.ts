@@ -9,7 +9,8 @@ export class ResponseProductListItemDto {
 
   @ApiProperty({
     description: 'Изображение продукта',
-    example: 'https://example.com/pizza.jpg',
+    example:
+      'https://cs.pikabu.ru/post_img/2013/04/05/11/1365183909_433145377.jpg',
   })
   image: string;
 

@@ -40,7 +40,7 @@ export class JwtAuthGuard implements CanActivate {
       }
 
       const refresh_decode: { idUser: number } | null =
-        await this.jwtHelper.verifyRefreshToken(request.cookies?.sid);
+        await this.jwtHelper.verifyRefreshToken(session.refreshToken);
       if (!refresh_decode) {
         throw new UnauthorizedException({
           auth: false,

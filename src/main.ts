@@ -22,7 +22,7 @@ async function bootstrap() {
     'localhost';
   app.use(useragent.express());
   await PostgresFactory.initAuthTables();
-  app.setGlobalPrefix('foodcord/api/v1/');
+  app.setGlobalPrefix('/api/foodcord');
   app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({
@@ -36,7 +36,7 @@ async function bootstrap() {
   );
   app.useGlobalGuards(new RateLimitGuard(app.get(RedisService)));
   app.enableCors({
-    origin: true,
+    origin: ['https://statosphera.ru', 'statosphera.ru'],
     methods: ['GET', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
       'Content-Type',
@@ -61,7 +61,7 @@ async function bootstrap() {
 
   // SWAGGER CONFIGURATION
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('')
+    .setTitle('Чтонибудь напишем потом, пока что пусто не до этого, вот так')
     .setDescription('API statosphera.ru')
     .setVersion('1.1')
     .addCookieAuth('access_token', {
@@ -89,7 +89,7 @@ async function bootstrap() {
     .build();
 
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/v2/docs', app, swaggerDocument, {
+  SwaggerModule.setup('api/foodcord/docs', app, swaggerDocument, {
     swaggerOptions: {
       withCredentials: true,
       docExpansion: 'none', // все операции свернуты
@@ -103,7 +103,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new LoggerInterceptor(configService)); // kafkaService
   await app.listen(PORT);
   logger.log(`----------------------------------------------------------`);
-  logger.log(`-- Swagger ${APP_URL}:${PORT}/api/v2/docs`);
+  logger.log(`-- Swagger ${APP_URL}:${PORT}/api/foodcord/docs`);
   logger.log(`-- URL  http://${APP_URL}:${PORT}`);
   logger.log(`-- Server ${configService.getOrThrow('PORT_SERVER')}`);
 }

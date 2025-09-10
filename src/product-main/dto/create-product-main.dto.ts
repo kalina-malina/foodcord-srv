@@ -145,7 +145,7 @@ export class CreateProductMainDto {
   @IsNumber()
   calories: number;
 
-  @ApiProperty({ description: 'Вес продукта ' })
+  @ApiProperty({ description: 'цвета подложки фото продукта' })
   @IsString()
   colors: string;
 }

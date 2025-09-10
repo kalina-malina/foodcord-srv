@@ -5,7 +5,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @Controller('role')
 @UseGuards(JwtAuthGuard)
-@ApiTags('Типы продуктов')
+@ApiTags('Роли')
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 

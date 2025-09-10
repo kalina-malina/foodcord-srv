@@ -10,20 +10,39 @@ export class RedisSessionService {
   async setSession(
     sessionId: string,
     userData: any,
-    time: number,
-    unit: 'minutes' | 'days' = 'minutes',
+    refreshTokenExpiresIn: string, // Принимаем строку формата JWT (например "7d", "1h")
   ): Promise<void> {
-    let maxAge: number;
-    if (unit === 'days') {
-      maxAge = time * 24 * 60 * 60 * 1000;
-    } else {
-      maxAge = time * 60 * 1000;
-    }
+    // Конвертируем JWT время в секунды для Redis
+    const ttlSeconds = this.convertJwtTimeToSeconds(refreshTokenExpiresIn);
+
     await this.redisClient.setEx(
       `sess:${sessionId}`,
-      maxAge,
+      ttlSeconds, // Redis ожидает секунды, не миллисекунды!
       JSON.stringify(userData),
     );
+  }
+
+  private convertJwtTimeToSeconds(jwtTime: string): number {
+    const timeValue = parseInt(jwtTime);
+    const timeUnit = jwtTime.replace(timeValue.toString(), '');
+
+    switch (timeUnit) {
+      case 's':
+        return timeValue;
+      case 'm':
+        return timeValue * 60;
+      case 'h':
+        return timeValue * 60 * 60;
+      case 'd':
+        return timeValue * 24 * 60 * 60;
+      case 'w':
+        return timeValue * 7 * 24 * 60 * 60;
+      case 'y':
+        return timeValue * 365 * 24 * 60 * 60;
+      default:
+        // Если нет единицы измерения, считаем что это секунды
+        return parseInt(jwtTime);
+    }
   }
 
   async getSession(sessionId: string): Promise<any | null> {
