@@ -16,15 +16,13 @@ export class CookieAuth {
   ) {
     let maxAge: number;
 
-    // Если передана строка (JWT формат), конвертируем
     if (typeof time === 'string') {
       maxAge = this.convertJwtTimeToMilliseconds(time);
     } else {
-      // Старая логика для чисел
       if (unit === 'days') {
-        maxAge = time * 24 * 60 * 60 * 1000; // дни в миллисекунды
+        maxAge = time * 24 * 60 * 60 * 1000;
       } else {
-        maxAge = time * 60 * 1000; // минуты в миллисекунды
+        maxAge = time * 60 * 1000;
       }
     }
     response.cookie(name, value, {
@@ -34,7 +32,6 @@ export class CookieAuth {
       path: '/',
       maxAge: maxAge,
     });
-    // Правильно рассчитываем время истечения
     let expiresDate: moment.Moment;
     if (typeof time === 'string') {
       expiresDate = this.addJwtTimeToMoment(moment(), time);
@@ -62,7 +59,6 @@ export class CookieAuth {
       case 'y':
         return timeValue * 365 * 24 * 60 * 60 * 1000;
       default:
-        // Если нет единицы измерения, считаем что это секунды
         return parseInt(jwtTime) * 1000;
     }
   }
@@ -88,7 +84,6 @@ export class CookieAuth {
       case 'y':
         return momentObj.add(timeValue, 'years');
       default:
-        // Если нет единицы измерения, считаем что это секунды
         return momentObj.add(parseInt(jwtTime), 'seconds');
     }
   }

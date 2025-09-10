@@ -10,14 +10,13 @@ export class RedisSessionService {
   async setSession(
     sessionId: string,
     userData: any,
-    refreshTokenExpiresIn: string, // Принимаем строку формата JWT (например "7d", "1h")
+    refreshTokenExpiresIn: string,
   ): Promise<void> {
-    // Конвертируем JWT время в секунды для Redis
     const ttlSeconds = this.convertJwtTimeToSeconds(refreshTokenExpiresIn);
 
     await this.redisClient.setEx(
       `sess:${sessionId}`,
-      ttlSeconds, // Redis ожидает секунды, не миллисекунды!
+      ttlSeconds,
       JSON.stringify(userData),
     );
   }
@@ -40,7 +39,6 @@ export class RedisSessionService {
       case 'y':
         return timeValue * 365 * 24 * 60 * 60;
       default:
-        // Если нет единицы измерения, считаем что это секунды
         return parseInt(jwtTime);
     }
   }

@@ -83,7 +83,6 @@ export class AuthService {
 
     const sid = randomBytes(32).toString('hex');
 
-    // Используем тот же срок жизни что и у refresh токена
     const refreshTokenTTL =
       this.configService.get('JWT_REFRESH_EXPIRES_IN') || '7d';
 
@@ -110,7 +109,7 @@ export class AuthService {
         divase: device,
         createAt: moment().format('YYYY-MM-DD HH:mm:ss'),
       },
-      refreshTokenTTL, // Теперь Redis сессия живет столько же сколько refresh token!
+      refreshTokenTTL,
     );
     res.status(200).json({
       auth: true,
