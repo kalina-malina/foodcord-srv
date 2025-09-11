@@ -38,7 +38,7 @@ export class ProductMainService {
       carbohydrates,
       calories,
       type,
-      colors,
+      color,
       extras,
     } = createProductMainDto;
 
@@ -56,7 +56,7 @@ export class ProductMainService {
       !subgroups ||
       !ingredients ||
       !type ||
-      !colors ||
+      !color ||
       !extras
     ) {
       return {
@@ -87,7 +87,7 @@ export class ProductMainService {
           'subgroups',
           'ingredients',
           'type',
-          'colors',
+          'color',
           'extras',
           'composition',
           'fats',
@@ -104,7 +104,7 @@ export class ProductMainService {
             groups,
             subgroups,
             type,
-            colors,
+            color,
             extras,
             ingredients,
             composition,
