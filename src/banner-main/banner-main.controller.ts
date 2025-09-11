@@ -20,7 +20,6 @@ import { JwtAuthGuard } from '@/auth/guards/auth.guard';
 
 @ApiTags('Баннеры стартового экрана')
 @Controller('banner-main')
-@UseGuards(JwtAuthGuard)
 export class BannerMainController {
   constructor(private readonly bannerMainService: BannerMainService) {}
 
@@ -39,12 +38,14 @@ export class BannerMainController {
     return this.bannerMainService.create(createBannerMainDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
   @ApiOperation({ summary: 'Получение списка всех баннеров' })
   findAll() {
     return this.bannerMainService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   @ApiOperation({ summary: 'Получение баннера по ID' })
   findOne(@Param('id') id: string) {
