@@ -4,7 +4,7 @@ import { JwtAuthGuard } from '@/auth/guards/auth.guard';
 import { ProductExtrasService } from './product-extras.service';
 
 @Controller('product-extras')
-@ApiTags('Ингредиенты продуктов')
+@ApiTags('Дополнительные продукты')
 @UseGuards(JwtAuthGuard)
 export class ProductExtrasController {
   constructor(private readonly productExtrasService: ProductExtrasService) {}

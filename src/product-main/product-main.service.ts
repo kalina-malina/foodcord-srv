@@ -292,7 +292,7 @@ export class ProductMainService {
       LEFT JOIN products_original ext ON po.id = ANY(pm.groups) and ext.type = 'extras'
       LEFT JOIN products_main inf ON inf.id = pm.id
       LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
-      WHERE pm.id = ${id}
+      WHERE pm.id = $1
       GROUP BY
           pm.id, pm.name, pm.image, pm.composition, pm.description,
           pm.fats, pm.proteins, pm.carbohydrates, pm.calories,
