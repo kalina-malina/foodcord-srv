@@ -1,3 +1,4 @@
+import { transformNumberArray } from '@/utils/transform-array';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
@@ -25,16 +26,7 @@ export class CreateBannerMainDto {
 
   @ApiProperty({ description: 'Массив ID магазинов', example: [1, 4] })
   @IsOptional()
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      try {
-        return JSON.parse(value);
-      } catch {
-        return value.split(',').map((item: string) => parseInt(item.trim()));
-      }
-    }
-    return value;
-  })
+  @Transform(({ value }) => transformNumberArray(value))
   @IsArray()
   @IsNumber({}, { each: true })
   store?: number[];
@@ -44,11 +36,10 @@ export class CreateBannerMainDto {
   @IsBoolean()
   is_active?: boolean;
 
-  @IsOptional()
   @ApiProperty({
     type: 'string',
     format: 'binary',
     description: 'Файл баннера (изображение или видео)',
   })
-  file?: Express.Multer.File;
+  file: Express.Multer.File;
 }
