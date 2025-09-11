@@ -6,6 +6,8 @@ import {
   UseInterceptors,
   UploadedFiles,
   UseGuards,
+  Delete,
+  Param,
 } from '@nestjs/common';
 import { ProductMainService } from './product-main.service';
 import { CreateProductMainDto } from './dto/create-product-main.dto';
@@ -54,19 +56,20 @@ export class ProductMainController {
     return await this.productMainService.findAll();
   }
 
-  // @Patch(':id')
-  // update(
-  //   @Param('id') id: string,
-  //   @Body() updateProductMainDto: UpdateProductMainDto,
-  // ) {
-  //   return this.productMainService.update(+id, updateProductMainDto);
-  // }
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Получение продукта по id',
+  })
+  @ApiResponse({ type: ResponseProductMainDto })
+  async findOne(@Param('id') id: string) {
+    return await this.productMainService.findOne(+id);
+  }
 
-  // @Delete(':id')
-  // @ApiOperation({
-  //   summary: 'Удаление продукта ',
-  // })
-  // remove(@Param('id') id: string) {
-  //   return this.productMainService.remove(+id);
-  // }
+  @Delete(':id')
+  @ApiOperation({
+    summary: 'Удаление продукта ',
+  })
+  remove(@Param('id') id: string) {
+    return this.productMainService.remove(+id);
+  }
 }
