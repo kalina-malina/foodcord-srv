@@ -118,7 +118,7 @@ export class CreateProductMainDto {
 
   @ApiProperty({ description: 'цвета подложки фото продукта' })
   @IsString()
-  colors: string;
+  color: string;
 }
 
 export class CreateProductTypeDto {
