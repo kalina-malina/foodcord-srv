@@ -271,7 +271,9 @@ export class ProductMainService {
                   DISTINCT JSONB_BUILD_OBJECT(
                       'id', ext.id,
                       'name', ext.name,
-                      'price', ext.price
+                      'price', ext.price,
+                      'image', ext.image,
+                      'weight', ext.weight
                   )
               ) FILTER (WHERE pm.id IS NOT NULL),
               '[]'::jsonb
