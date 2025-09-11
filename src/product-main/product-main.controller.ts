@@ -25,10 +25,10 @@ import { JwtAuthGuard } from '@/auth/guards/auth.guard';
 
 @ApiTags('Продукты для отображения на устройстве')
 @Controller('product-main')
-@UseGuards(JwtAuthGuard)
 export class ProductMainController {
   constructor(private readonly productMainService: ProductMainService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
@@ -65,6 +65,7 @@ export class ProductMainController {
     return await this.productMainService.findOne(+id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   @ApiOperation({
     summary: 'Удаление продукта ',

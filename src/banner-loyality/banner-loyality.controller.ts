@@ -21,7 +21,6 @@ import { UpdateBannerLoyalityDto } from './dto/update-banner-loyality.dto';
 
 @Controller('banner-loyality')
 @ApiTags('Баннеры страницы ввода номера телефона лояльности')
-@UseGuards(JwtAuthGuard)
 export class BannerLoyalityController {
   constructor(private readonly bannerLoyalityService: BannerLoyalityService) {}
 
@@ -42,6 +41,7 @@ export class BannerLoyalityController {
     return this.bannerLoyalityService.create(createBannerLoyalityDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
   @ApiOperation({
     summary: 'Получение списка всех баннеров, страница ввода номера телефона',
@@ -50,6 +50,7 @@ export class BannerLoyalityController {
     return this.bannerLoyalityService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   @ApiOperation({ summary: 'Получение баннера по ID' })
   findOne(@Param('id') id: string) {

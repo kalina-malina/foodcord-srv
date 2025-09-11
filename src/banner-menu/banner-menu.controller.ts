@@ -16,7 +16,6 @@ import { ApiTags } from '@nestjs/swagger';
 
 @Controller('banner-menu')
 @ApiTags('Баннеры меню')
-@UseGuards(JwtAuthGuard)
 export class BannerMenuController {
   constructor(private readonly bannerMenuService: BannerMenuService) {}
 
@@ -26,11 +25,13 @@ export class BannerMenuController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   findAll() {
     return this.bannerMenuService.findAll();
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string) {
     return this.bannerMenuService.findOne(+id);
   }
