@@ -38,7 +38,7 @@ export class UploadPhotoService {
         );
       } else {
         const coverWebpBuffer = await sharp(file.buffer)
-          .webp({ quality: 90, lossless: true })
+          .webp({ quality: 100, lossless: true })
           .toBuffer();
 
         await this.s3Storage.uploadFile(
