@@ -70,6 +70,12 @@ export class CreateProductMainDto {
   @IsNumber({}, { each: true })
   type: number[];
 
+  @ApiProperty({ description: 'Дополнительные продукты', example: [1, 2, 3] })
+  @Transform(({ value }) => transformNumberArray(value))
+  @IsArray()
+  @IsNumber({}, { each: true })
+  extras: number[];
+
   @ApiProperty({
     description: 'Состав продукта',
     example: 'Тесто, томатный соус, моцарелла, базилик',
