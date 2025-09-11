@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { CreateProductMainDto } from './dto/create-product-main.dto';
 import { DatabaseService } from '@/pg-connect/foodcord/orm/grud-postgres.service';
 import { GRUD_OPERATION } from '@/pg-connect/foodcord/orm/enum/metod.enum';
@@ -56,6 +60,15 @@ export class ProductMainService {
     const transaction: PoolClient =
       await this.databaseService.beginTransaction();
     try {
+      //проверка сушествования в базе названия
+      const checkName = await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query: `SELECT id FROM products_main WHERE lower(name) = lower('${name}')`,
+      });
+      if (checkName.length > 0) {
+        throw new ConflictException('Название продукта уже существует');
+      }
+
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.INSERT,
         table_name: 'products_main',
@@ -135,7 +148,7 @@ export class ProductMainService {
       throw new BadRequestException('Продукт не создан');
     } catch (error: any) {
       await this.databaseService.rollbackTransaction(transaction);
-      throw new BadRequestException('Продукт не создан ' + error.message);
+      throw new BadRequestException(error.message);
     } finally {
       await this.databaseService.releaseClient(transaction);
     }
@@ -155,11 +168,11 @@ export class ProductMainService {
                       'id', po.id,
                       'name', po.name
                   )
-              ) FILTER (WHERE po.id IS NOT NULL),
+              ) FILTER (WHERE pm.id IS NOT NULL),
               '[]'::jsonb
           ) AS groups,
           COALESCE(
-              ARRAY_AGG(DISTINCT po.name) FILTER (WHERE po.id IS NOT NULL),
+              ARRAY_AGG(DISTINCT po.name) FILTER (WHERE pm.id IS NOT NULL),
               '{}'::text[]
           ) AS subgroup,
           COALESCE(
@@ -173,7 +186,7 @@ export class ProductMainService {
               '[]'::jsonb
           ) AS extras,
             COALESCE(
-              ARRAY_AGG(DISTINCT ing.name) FILTER (WHERE ing.id IS NOT NULL),
+              ARRAY_AGG(DISTINCT ing.name) FILTER (WHERE pm.id IS NOT NULL),
               '{}'::text[]
           ) AS ingredients,
           COALESCE(
@@ -184,7 +197,7 @@ export class ProductMainService {
                       'price', typ.price,
                       'weight', typ.weight
                   )
-              ) FILTER (WHERE typ.id IS NOT NULL),
+              ) FILTER (WHERE pm.id IS NOT NULL),
               '[]'::jsonb
           ) AS type,
               JSONB_BUILD_OBJECT(
@@ -217,6 +230,86 @@ export class ProductMainService {
     }
 
     return result.rows;
+  }
+
+  async findOne(id: number) {
+    const query = `
+         SELECT
+          pm.id::int,
+          pm.name,
+          pm.image,
+          pm.variant,
+          pm.color,
+          COALESCE(
+              JSONB_AGG(
+                  DISTINCT JSONB_BUILD_OBJECT(
+                      'id', po.id,
+                      'name', po.name
+                  )
+              ) FILTER (WHERE pm.id IS NOT NULL),
+              '[]'::jsonb
+          ) AS groups,
+          COALESCE(
+              ARRAY_AGG(DISTINCT po.name) FILTER (WHERE pm.id IS NOT NULL),
+              '{}'::text[]
+          ) AS subgroup,
+          COALESCE(
+              JSONB_AGG(
+                  DISTINCT JSONB_BUILD_OBJECT(
+                      'id', ext.id,
+                      'name', ext.name,
+                      'price', ext.price
+                  )
+              ) FILTER (WHERE ext.id IS NOT NULL),
+              '[]'::jsonb
+          ) AS extras,
+            COALESCE(
+              ARRAY_AGG(DISTINCT ing.name) FILTER (WHERE pm.id IS NOT NULL),
+              '{}'::text[]
+          ) AS ingredients,
+          COALESCE(
+              JSONB_AGG(
+                  DISTINCT JSONB_BUILD_OBJECT(
+                      'id', typ.id,
+                      'name', typ.name,
+                      'price', typ.price,
+                      'weight', typ.weight
+                  )
+              ) FILTER (WHERE pm.id IS NOT NULL),
+              '[]'::jsonb
+          ) AS type,
+              JSONB_BUILD_OBJECT(
+              'composition', pm.composition,
+              'description', pm.description,
+              'fats', pm.fats::numeric,
+              'proteins', pm.proteins::numeric,
+              'carbohydrates', pm.carbohydrates::numeric,
+              'calories', pm.calories::numeric
+          ) AS information
+      FROM products_main pm
+      LEFT JOIN groups po ON po.id = ANY(pm.groups)
+      LEFT JOIN products_original typ ON po.id = ANY(pm.groups) and typ.type = 'type'
+      LEFT JOIN products_original ext ON po.id = ANY(pm.groups) and ext.type = 'extras'
+      LEFT JOIN products_main inf ON inf.id = pm.id
+      LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
+      WHERE pm.id = ${id}
+      GROUP BY
+          pm.id, pm.name, pm.image, pm.composition, pm.description,
+          pm.fats, pm.proteins, pm.carbohydrates, pm.calories,
+          pm.variant, pm.groups, pm.subgroups;
+    `;
+
+    const result = await this.databaseService.executeOperation({
+      operation: GRUD_OPERATION.QUERY,
+      query: query,
+      params: [id],
+    });
+
+    if (result.length === 0) {
+      throw new BadRequestException('Продукт не найден');
+    }
+
+    return result.rows[0];
   }
 
   async remove(id: number) {

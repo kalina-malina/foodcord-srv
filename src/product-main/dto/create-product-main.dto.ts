@@ -10,6 +10,7 @@ import {
 import { Type, Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { VARIANT_PRODUCT_ENUM } from '../enum/main.product.enum';
+import { transformNumberArray } from '@/utils/transform-array';
 
 export class CreateProductMainDto {
   @ApiProperty({ description: 'Название продукта', example: 'Пицца Маргарита' })
@@ -40,49 +41,22 @@ export class CreateProductMainDto {
   variant: VARIANT_PRODUCT_ENUM;
 
   @ApiProperty({ description: 'Группы продукта', example: [1, 4] })
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      try {
-        return JSON.parse(value);
-      } catch {
-        return value.split(',').map((item: string) => parseInt(item.trim()));
-      }
-    }
-    return value;
-  })
+  @Transform(({ value }) => transformNumberArray(value))
   @IsArray()
   @IsNumber({}, { each: true })
   groups: number[];
 
   @ApiProperty({ description: 'Подгруппы продукта', example: [1, 2] })
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      try {
-        return JSON.parse(value);
-      } catch {
-        return value.split(',').map((item: string) => item.trim());
-      }
-    }
-    return value;
-  })
+  @Transform(({ value }) => transformNumberArray(value))
   @IsArray()
-  @IsString({ each: true })
-  subgroups: string[];
+  @IsNumber({}, { each: true })
+  subgroups: number[];
 
   @ApiProperty({
     description: 'Ингредиенты продукта',
     example: [1, 2, 3],
   })
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      try {
-        return JSON.parse(value);
-      } catch {
-        return value.split(',').map((item: string) => parseInt(item.trim()));
-      }
-    }
-    return value;
-  })
+  @Transform(({ value }) => transformNumberArray(value))
   @IsArray()
   @IsNumber({}, { each: true })
   ingredients: number[];
@@ -91,16 +65,7 @@ export class CreateProductMainDto {
     description: 'Тип продукта',
     example: [1, 2, 3],
   })
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      try {
-        return JSON.parse(value);
-      } catch {
-        return value.split(',').map((item: string) => parseInt(item.trim()));
-      }
-    }
-    return value;
-  })
+  @Transform(({ value }) => transformNumberArray(value))
   @IsArray()
   @IsNumber({}, { each: true })
   type: number[];
