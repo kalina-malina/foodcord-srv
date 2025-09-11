@@ -90,8 +90,12 @@ export class ProductIngridientsService {
         table_name: 'products_ingredients',
         conflict: ['id'],
         columnUpdate: ['name'],
-        params: [updateProductIngridientDto.name, id],
+        data: [{ id: id, name: updateProductIngridientDto.name }],
       });
+      return {
+        success: true,
+        message: 'ингредиент продукта обновлен',
+      };
     } catch (error: any) {
       throw new BadGatewayException(
         `ошибка при обновлении ингредиента продукта по id: ${error.message}`,
