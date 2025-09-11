@@ -37,6 +37,9 @@ export class ProductMainService {
       proteins,
       carbohydrates,
       calories,
+      type,
+      colors,
+      extras,
     } = createProductMainDto;
 
     if (
@@ -51,7 +54,10 @@ export class ProductMainService {
       !calories ||
       !groups ||
       !subgroups ||
-      !ingredients
+      !ingredients ||
+      !type ||
+      !colors ||
+      !extras
     ) {
       return {
         message: 'Не все поля заполнены',
@@ -80,6 +86,9 @@ export class ProductMainService {
           'groups',
           'subgroups',
           'ingredients',
+          'type',
+          'colors',
+          'extras',
           'composition',
           'fats',
           'proteins',
@@ -94,7 +103,9 @@ export class ProductMainService {
             description,
             groups,
             subgroups,
-
+            type,
+            colors,
+            extras,
             ingredients,
             composition,
             fats,
@@ -182,7 +193,7 @@ export class ProductMainService {
                       'name', ext.name,
                       'price', ext.price
                   )
-              ) FILTER (WHERE ext.id IS NOT NULL),
+              ) FILTER (WHERE pm.id IS NOT NULL),
               '[]'::jsonb
           ) AS extras,
             COALESCE(
@@ -210,8 +221,8 @@ export class ProductMainService {
           ) AS information
       FROM products_main pm
       LEFT JOIN groups po ON po.id = ANY(pm.groups)
-      LEFT JOIN products_original typ ON po.id = ANY(pm.groups) and typ.type = 'type'
-      LEFT JOIN products_original ext ON po.id = ANY(pm.groups) and ext.type = 'extras'
+      LEFT JOIN products_original typ ON typ.id = ANY(pm.type) and typ.type = 'type'
+      LEFT JOIN products_original ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
       LEFT JOIN products_main inf ON inf.id = pm.id
       LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
       GROUP BY
@@ -260,7 +271,7 @@ export class ProductMainService {
                       'name', ext.name,
                       'price', ext.price
                   )
-              ) FILTER (WHERE ext.id IS NOT NULL),
+              ) FILTER (WHERE pm.id IS NOT NULL),
               '[]'::jsonb
           ) AS extras,
             COALESCE(
@@ -288,8 +299,8 @@ export class ProductMainService {
           ) AS information
       FROM products_main pm
       LEFT JOIN groups po ON po.id = ANY(pm.groups)
-      LEFT JOIN products_original typ ON po.id = ANY(pm.groups) and typ.type = 'type'
-      LEFT JOIN products_original ext ON po.id = ANY(pm.groups) and ext.type = 'extras'
+      LEFT JOIN products_original typ ON typ.id = ANY(pm.type) and typ.type = 'type'
+      LEFT JOIN products_original ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
       LEFT JOIN products_main inf ON inf.id = pm.id
       LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
       WHERE pm.id = $1

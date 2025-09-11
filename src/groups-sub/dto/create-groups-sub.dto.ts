@@ -6,7 +6,3 @@ export class CreateGroupSubDto {
   @IsString()
   name: string;
 }
-
-///граммы
-//colors
-//
