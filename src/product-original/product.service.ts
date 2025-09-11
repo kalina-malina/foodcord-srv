@@ -59,7 +59,15 @@ export class ProductOriginslService {
       operation: GRUD_OPERATION.UPDATE,
       table_name: 'products_original',
       conflict: ['id_product'],
-      columnUpdate: ['id_product', 'image', 'description', 'name'],
+      columnUpdate: [
+        'id_product',
+        'image',
+        'description',
+        'name',
+        'price',
+        'type',
+        'weight',
+      ],
       data: [
         {
           id_product: idProduct,
@@ -68,6 +76,7 @@ export class ProductOriginslService {
           name: createProductDto.name,
           price: createProductDto.price,
           type: createProductDto.type,
+          weight: createProductDto.weight,
         },
       ],
     });
