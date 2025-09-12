@@ -19,7 +19,7 @@ import { BannerMenuService } from './banner-menu.service';
 import { CreateBannerMenuDto } from './dto/create-banner-menu.dto';
 import { UpdateBannerMenuDto } from './dto/update-banner-menu.dto';
 
-@ApiTags('Баннеры стартового экрана')
+@ApiTags('Баннеры Меню')
 @Controller('banner-menu')
 export class BannerMenuController {
   constructor(private readonly bannerMainService: BannerMenuService) {}

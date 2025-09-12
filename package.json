@@ -28,8 +28,10 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/platform-socket.io": "^11.1.6",
     "@nestjs/schedule": "^6.0.0",
     "@nestjs/swagger": "^11.2.0",
+    "@nestjs/websockets": "^11.1.6",
     "@types/bull": "^3.15.9",
     "@types/lodash": "^4.17.20",
     "@types/transliteration": "^1.6.1",
@@ -50,6 +52,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "sharp": "^0.34.3",
+    "socket.io": "^4.8.1",
     "swagger-ui-express": "^5.0.1",
     "transliteration": "^2.3.5"
   },
