@@ -16,7 +16,10 @@ export class ProductDto {
 }
 
 export class CreateOrderDto {
-  @ApiProperty({ description: 'продукты' })
+  @ApiProperty({
+    description: 'продукты в заказе',
+    type: [ProductDto],
+  })
   @IsArray()
   products: ProductDto[];
 

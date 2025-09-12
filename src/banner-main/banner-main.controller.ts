@@ -28,7 +28,7 @@ export class BannerMainController {
   @ApiBody({ type: CreateBannerMainDto })
   @ApiOperation({ summary: 'Создание нового баннера' })
   @UseInterceptors(FileInterceptor('file', multerUniversalOptions))
-  create(
+  async create(
     @Body() createBannerMainDto: CreateBannerMainDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
@@ -41,14 +41,14 @@ export class BannerMainController {
   @UseGuards(JwtAuthGuard)
   @Get()
   @ApiOperation({ summary: 'Получение списка всех баннеров' })
-  findAll() {
+  async findAll() {
     return this.bannerMainService.findAll();
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   @ApiOperation({ summary: 'Получение баннера по ID' })
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return this.bannerMainService.findOne(+id);
   }
 
@@ -57,7 +57,7 @@ export class BannerMainController {
   @ApiBody({ type: UpdateBannerMainDto })
   @ApiOperation({ summary: 'Обновление баннера' })
   @UseInterceptors(FileInterceptor('file', multerUniversalOptions))
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateBannerMainDto: UpdateBannerMainDto,
     @UploadedFile() file: Express.Multer.File,
@@ -70,7 +70,7 @@ export class BannerMainController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Удаление баннера' })
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
     return this.bannerMainService.remove(+id);
   }
 }
