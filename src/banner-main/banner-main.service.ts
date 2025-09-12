@@ -102,8 +102,9 @@ export class BannerMainService {
     try {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query:
-          'SELECT id::int,seconds,url, type FROM banner_main ORDER BY id DESC',
+        query: `SELECT
+           id:: int, seconds:: int, url, type, name, type, store, is_active as
+           "isActive", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_main ORDER BY id DESC`,
         params: [],
       });
       return {
@@ -122,8 +123,8 @@ export class BannerMainService {
     try {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query:
-          'SELECT id::int,seconds,url, type FROM banner_main WHERE id = $1',
+        query: `SELECT id:: int, seconds:: int, url, type, name, type, store, is_active as
+           "isActive", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_main WHERE id = $1`,
         params: [id],
       });
 

@@ -1,10 +1,10 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @Controller('orders')
-@ApiTags('Создание заказа')
+@ApiTags('Заказы')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
@@ -14,5 +14,17 @@ export class OrdersController {
   @ApiResponse({ status: 400, description: 'Некорректные данные' })
   async create(@Body() createOrderDto: CreateOrderDto) {
     return await this.ordersService.create(createOrderDto);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Получение заказа по id' })
+  async findOne(@Param('id') id: string) {
+    return await this.ordersService.findOne(id);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Получение всех заказов' })
+  async findAll() {
+    return await this.ordersService.findAll();
   }
 }
