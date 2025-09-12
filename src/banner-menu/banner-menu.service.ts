@@ -57,8 +57,8 @@ export class BannerMenuService {
           const isVideo =
             createBannerMainDto.file.mimetype.startsWith('video/');
           const s3Path = isVideo
-            ? S3_PATCH_ENUM.BANNER_MAIN_VIDEO
-            : S3_PATCH_ENUM.BANNER_MAIN_IMAGE;
+            ? S3_PATCH_ENUM.BANNER_MENU_VIDEO
+            : S3_PATCH_ENUM.BANNER_MENU_IMAGE;
 
           urlFile = await this.uploadPhotoService.uploadPhoto(
             createBannerMainDto.file,
@@ -193,8 +193,8 @@ export class BannerMenuService {
       if (file) {
         const isVideo = file.mimetype.startsWith('video/');
         const s3Path = isVideo
-          ? S3_PATCH_ENUM.BANNER_MAIN_VIDEO
-          : S3_PATCH_ENUM.BANNER_MAIN_IMAGE;
+          ? S3_PATCH_ENUM.BANNER_MENU_VIDEO
+          : S3_PATCH_ENUM.BANNER_MENU_IMAGE;
 
         const urlFile = await this.uploadPhotoService.uploadPhoto(
           file,
