@@ -15,32 +15,30 @@ export class JwtHelper {
   }
 
   async getAccessToken(payload: object): Promise<string> {
+    const expiresIn = this.configService.get('JWT_ACCESS_EXPIRES_IN') || '15m';
+
     return jwt.sign(payload, this.secret, {
-      expiresIn: this.configService.get('JWT_ACCESS_EXPIRES_IN'),
+      expiresIn: expiresIn,
     });
   }
 
   async getRefreshToken(payload: object): Promise<string> {
+    const expiresIn = this.configService.get('JWT_REFRESH_EXPIRES_IN') || '1d';
+
     return jwt.sign(payload, this.secret, {
-      expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN'),
+      expiresIn: expiresIn,
     });
   }
 
-  async verifyRefreshToken(sid: string): Promise<{ idUser: number } | null> {
+  async verifyRefreshToken(
+    refreshToken: string,
+  ): Promise<{ idUser: number } | null> {
     try {
-      if (!sid) {
-        return null;
-      }
-      const session = await this.redisSession.getSession(sid);
-
-      if (!session) {
+      if (!refreshToken) {
         return null;
       }
 
-      const decoded = jwt.verify(
-        session.refreshToken,
-        this.secret,
-      ) as JwtPayload;
+      const decoded = jwt.verify(refreshToken, this.secret) as JwtPayload;
 
       return { idUser: decoded.idUser };
     } catch {

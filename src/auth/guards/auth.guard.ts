@@ -9,6 +9,7 @@ import { JwtHelper } from '../utils/jwt.helpers';
 import { CookieAuth } from '../utils/cookie.helpers';
 
 import { RedisSessionService } from '../session/redis.session.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -16,6 +17,7 @@ export class JwtAuthGuard implements CanActivate {
     private readonly jwtHelper: JwtHelper,
     private readonly cookieAuth: CookieAuth,
     private readonly redisSession: RedisSessionService,
+    private readonly configService: ConfigService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -31,6 +33,7 @@ export class JwtAuthGuard implements CanActivate {
         };
         return true;
       }
+
       const session = await this.redisSession.getSession(request.cookies?.sid);
       if (!session) {
         throw new UnauthorizedException({
@@ -51,12 +54,14 @@ export class JwtAuthGuard implements CanActivate {
           session: request.cookies?.sid,
           idUser: refresh_decode.idUser,
         });
+        const accessTokenTTL =
+          this.configService.get('JWT_ACCESS_EXPIRES_IN') || '15m';
+
         await this.cookieAuth.setCookie(
           res,
           'access_token',
           accessToken,
-          0.5,
-          'minutes',
+          accessTokenTTL,
         );
         request.user = {
           idUser: refresh_decode.idUser,
