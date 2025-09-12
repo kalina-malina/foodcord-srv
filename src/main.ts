@@ -84,6 +84,7 @@ async function bootstrap() {
     //   type: 'http',
     //   in: 'Header',
     // })
+
     .setContact('//', '//', '//')
     .setLicense('contacts', 'https://t.me/')
     .build();

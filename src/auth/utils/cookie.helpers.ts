@@ -12,14 +12,17 @@ export class CookieAuth {
     name: string,
     value: string,
     time: number | string,
-    unit: 'minutes' | 'days' = 'minutes',
+    unit?: 'minutes' | 'days',
   ) {
     let maxAge: number;
 
     if (typeof time === 'string') {
+      // Строка в формате JWT (15m, 1d, etc.)
       maxAge = this.convertJwtTimeToMilliseconds(time);
     } else {
-      if (unit === 'days') {
+      // Число + единица измерения
+      const timeUnit = unit || 'minutes';
+      if (timeUnit === 'days') {
         maxAge = time * 24 * 60 * 60 * 1000;
       } else {
         maxAge = time * 60 * 1000;
@@ -36,7 +39,8 @@ export class CookieAuth {
     if (typeof time === 'string') {
       expiresDate = this.addJwtTimeToMoment(moment(), time);
     } else {
-      expiresDate = moment().add(time, unit);
+      const timeUnit = unit || 'minutes';
+      expiresDate = moment().add(time, timeUnit);
     }
     return expiresDate.format('YYYY-MM-DD HH:mm:ss');
   }

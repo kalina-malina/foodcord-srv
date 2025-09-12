@@ -45,7 +45,12 @@ export class RedisSessionService {
 
   async getSession(sessionId: string): Promise<any | null> {
     const data = await this.redisClient.get(`sess:${sessionId}`);
-    return data ? JSON.parse(data) : null;
+
+    if (data) {
+      return JSON.parse(data);
+    } else {
+      return null;
+    }
   }
 
   async deleteSession(sessionId: string): Promise<void> {
