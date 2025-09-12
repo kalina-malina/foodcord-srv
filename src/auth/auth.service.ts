@@ -86,11 +86,14 @@ export class AuthService {
     const refreshTokenTTL =
       this.configService.get('JWT_REFRESH_EXPIRES_IN') || '7d';
 
+    const accessTokenTTL =
+      this.configService.get('JWT_ACCESS_EXPIRES_IN') || '15m';
+
     await this.cookieAuth.setCookie(
       res,
       'access_token',
       accessToken,
-      1,
+      accessTokenTTL,
       'minutes',
     );
     const expiresAt = await this.cookieAuth.setCookie(
