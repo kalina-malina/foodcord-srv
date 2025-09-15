@@ -6,24 +6,37 @@ import { ORDERS_STATUS } from './enum/orders-status.enum';
 
 @Injectable()
 export class OrdersService {
-  private ordersGateway: any; // Избегаем циркулярной зависимости
+  private ordersGateway: any;
 
   constructor(private readonly databaseService: DatabaseService) {}
 
-  // Метод для установки gateway (вызывается из модуля)
   setGateway(gateway: any) {
     this.ordersGateway = gateway;
   }
   async create(createOrderDto: CreateOrderDto) {
     const transaction = await this.databaseService.beginTransaction();
     try {
+      // Валидация и подготовка данных
+      if (!createOrderDto.products || !Array.isArray(createOrderDto.products)) {
+        throw new Error('Продукты должны быть массивом');
+      }
+
+      // Преобразуем каждый продукт в правильный объект
+      const normalizedProducts = createOrderDto.products.map((product) => ({
+        id: Number(product.id),
+        count: Number(product.count),
+        comment: String(product.comment),
+      }));
+
+      const productsJson = JSON.stringify(normalizedProducts);
+
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query: `INSERT INTO orders (id_store, phone_number, products, status) VALUES ($1, $2, $3, $4) RETURNING id`,
+        query: `INSERT INTO orders (id_store, phone_number, products, status, create_at, updated_at) VALUES ($1, $2, $3::json, $4, NOW(), NOW()) RETURNING id, create_at`,
         params: [
           createOrderDto.idStore,
           createOrderDto.phoneNumber,
-          createOrderDto.products,
+          productsJson, // Передаем как строку и приводим к JSON в SQL
           ORDERS_STATUS.NEW,
         ],
         transaction: transaction,
@@ -34,14 +47,13 @@ export class OrdersService {
       const orderData = {
         message: 'Заказ создан',
         orderId: +result.rows[0]?.id,
-        products: createOrderDto.products,
+        products: normalizedProducts, // Используем нормализованные продукты
         idStore: createOrderDto.idStore,
         phoneNumber: createOrderDto.phoneNumber,
         status: ORDERS_STATUS.NEW,
         createdAt: new Date().toISOString(),
       };
 
-      // Отправляем уведомление через WebSocket
       if (this.ordersGateway) {
         this.ordersGateway.notifyNewOrder(orderData);
       }
@@ -60,17 +72,40 @@ export class OrdersService {
   async findAll() {
     const result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
-      query: 'SELECT * FROM orders',
+      query:
+        'SELECT id, id_store, phone_number, products, status, create_at, updated_at FROM orders ORDER BY create_at DESC',
     });
-    return result.rows;
+
+    // Парсим JSON для каждого заказа
+    const orders = result.rows.map((order: any) => ({
+      ...order,
+      products:
+        typeof order.products === 'string'
+          ? JSON.parse(order.products)
+          : order.products,
+    }));
+
+    return orders;
   }
   async findOne(id: string) {
     const result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
-      query: `SELECT * FROM orders WHERE id = $1`,
+      query: `SELECT id, id_store, phone_number, products, status, create_at, updated_at FROM orders WHERE id = $1`,
       params: [id],
     });
-    return result.rows;
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    const order = result.rows[0];
+    return {
+      ...order,
+      products:
+        typeof order.products === 'string'
+          ? JSON.parse(order.products)
+          : order.products,
+    };
   }
 
   async updateStatus(orderId: number, status: ORDERS_STATUS) {

@@ -25,9 +25,31 @@ export class OrdersGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(private readonly ordersService: OrdersService) {}
 
   private readonly logger = new Logger(OrdersGateway.name);
-  handleConnection(client: Socket) {
-    // Присоединяем клиента к комнате для получения уведомлений о заказах
+
+  async handleConnection(client: Socket) {
     client.join('orders_room');
+    this.logger.log(`✅ клиент подключился: ${client.id}`);
+
+    // Отправляем подтверждение подключения
+    client.emit('connection_confirmed', {
+      message: 'Успешно подключен к заказам',
+      clientId: client.id,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Автоматически отправляем список заказов новому клиенту
+    try {
+      const orders = await this.ordersService.findAll();
+      client.emit('orders_list', orders);
+      this.logger.log(
+        `📋 отправлен список заказов клиенту ${client.id}: ${orders.length} шт.`,
+      );
+    } catch (error) {
+      this.logger.error(
+        '❌ ошибка при отправке заказов новому клиенту:',
+        error,
+      );
+    }
   }
 
   handleDisconnect(client: Socket) {
@@ -93,5 +115,35 @@ export class OrdersGateway implements OnGatewayConnection, OnGatewayDisconnect {
       success: true,
       message: 'Присоединились к комнате администраторов',
     };
+  }
+
+  // Получить информацию о подключенных клиентах
+  @SubscribeMessage('get_connected_clients')
+  async handleGetConnectedClients(@ConnectedSocket() client: Socket) {
+    try {
+      const ordersRoom = await this.server.in('orders_room').allSockets();
+      const adminRoom = await this.server.in('admin_room').allSockets();
+
+      const clientsInfo = {
+        ordersRoomClients: ordersRoom.size,
+        adminRoomClients: adminRoom.size,
+        totalClients: this.server.engine.clientsCount,
+        requestedBy: client.id,
+      };
+
+      this.logger.log(`📊 статистика клиентов: ${JSON.stringify(clientsInfo)}`);
+
+      client.emit('clients_info', clientsInfo);
+      return { success: true };
+    } catch (error) {
+      this.logger.error(
+        '❌ ошибка при получении информации о клиентах:',
+        error,
+      );
+      return {
+        success: false,
+        message: 'Ошибка при получении информации о клиентах',
+      };
+    }
   }
 }
