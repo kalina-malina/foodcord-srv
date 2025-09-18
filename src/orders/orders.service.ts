@@ -72,25 +72,63 @@ export class OrdersService {
   async findAll() {
     const result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
-      query:
-        'SELECT id, id_store, phone_number, products, status, create_at, updated_at FROM orders ORDER BY create_at DESC',
+      query: `SELECT id::int, id_store::int, phone_number,
+       products, status, 
+       TO_CHAR(create_at, 'DD.MM.YYYY, HH24:MI:SS') as create_at,
+       TO_CHAR(updated_at, 'DD.MM.YYYY, HH24:MI:SS') as updated_at 
+       FROM orders ORDER BY create_at DESC`,
     });
 
-    // Парсим JSON для каждого заказа
-    const orders = result.rows.map((order: any) => ({
-      ...order,
-      products:
-        typeof order.products === 'string'
-          ? JSON.parse(order.products)
-          : order.products,
-    }));
+    // Парсим JSON для каждого заказа и обогащаем данными о продуктах
+    const orders = await Promise.all(
+      result.rows.map(async (order: any) => {
+        const products =
+          typeof order.products === 'string'
+            ? JSON.parse(order.products)
+            : order.products;
+
+        // Получаем названия продуктов для каждого продукта в заказе
+        const enrichedProducts = await Promise.all(
+          products.map(async (product: any) => {
+            try {
+              const productResult = await this.databaseService.executeOperation(
+                {
+                  operation: GRUD_OPERATION.QUERY,
+                  query: `SELECT name_original FROM products_original WHERE id = $1`,
+                  params: [product.id],
+                },
+              );
+
+              return {
+                ...product,
+                name_original: productResult.rows[0]?.name_original || null,
+              };
+            } catch {
+              return {
+                ...product,
+                name_original: null,
+              };
+            }
+          }),
+        );
+
+        return {
+          ...order,
+          products: enrichedProducts,
+        };
+      }),
+    );
 
     return orders;
   }
+
   async findOne(id: string) {
     const result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
-      query: `SELECT id, id_store, phone_number, products, status, create_at, updated_at FROM orders WHERE id = $1`,
+      query: `SELECT id::int, id_store::int, phone_number, products, status, 
+      TO_CHAR(create_at, 'DD.MM.YYYY, HH24:MI:SS') as create_at,
+      TO_CHAR(updated_at, 'DD.MM.YYYY, HH24:MI:SS') as updated_at 
+      FROM orders WHERE id = $1`,
       params: [id],
     });
 
@@ -99,12 +137,37 @@ export class OrdersService {
     }
 
     const order = result.rows[0];
+    const products =
+      typeof order.products === 'string'
+        ? JSON.parse(order.products)
+        : order.products;
+
+    // Получаем названия продуктов для каждого продукта в заказе
+    const enrichedProducts = await Promise.all(
+      products.map(async (product: any) => {
+        try {
+          const productResult = await this.databaseService.executeOperation({
+            operation: GRUD_OPERATION.QUERY,
+            query: `SELECT name_original FROM products_original WHERE id = $1`,
+            params: [product.id],
+          });
+
+          return {
+            ...product,
+            name_original: productResult.rows[0]?.name_original || null,
+          };
+        } catch {
+          return {
+            ...product,
+            name_original: null,
+          };
+        }
+      }),
+    );
+
     return {
       ...order,
-      products:
-        typeof order.products === 'string'
-          ? JSON.parse(order.products)
-          : order.products,
+      products: enrichedProducts,
     };
   }
 

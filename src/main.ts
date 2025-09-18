@@ -45,6 +45,12 @@ async function bootstrap() {
       'X-API-Key',
       'x-api-key',
       'x-forwarded-for',
+      'Upgrade',
+      'Connection',
+      'Sec-WebSocket-Key',
+      'Sec-WebSocket-Version',
+      'Sec-WebSocket-Protocol',
+      'Sec-WebSocket-Extensions',
     ],
     exposedHeaders: [
       'Content-Type',
@@ -55,10 +61,11 @@ async function bootstrap() {
       'X-Requested-With',
       'Accept',
       'x-device-type',
+      'Upgrade',
+      'Connection',
     ],
     credentials: true,
   });
-
   // SWAGGER CONFIGURATION
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Чтонибудь напишем потом, пока что пусто не до этого, вот так')

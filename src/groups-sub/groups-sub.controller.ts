@@ -16,11 +16,11 @@ import { JwtAuthGuard } from '@/auth/guards/auth.guard';
 
 @Controller('groups-sub')
 @ApiTags('Подгруппы(теги в меню)')
-@UseGuards(JwtAuthGuard)
 export class GroupsSubController {
   constructor(private readonly groupsService: GroupsSubService) {}
 
   @Post('create')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: 'Создание подгруппы(теги в меню)',
   })
@@ -41,12 +41,14 @@ export class GroupsSubController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Обновить подгруппу(теги в меню) по id' })
   update(@Param('id') id: string, @Body() updateGroupDto: UpdateGroupSubDto) {
     return this.groupsService.update(+id, updateGroupDto);
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Удалить подгруппу(теги в меню) по id' })
   remove(@Param('id') id: string) {
     return this.groupsService.remove(+id);
