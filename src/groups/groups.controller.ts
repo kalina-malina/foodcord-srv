@@ -20,11 +20,11 @@ import { JwtAuthGuard } from '@/auth/guards/auth.guard';
 
 @Controller('groups')
 @ApiTags('Кастомные группы(отображение в меню на устройстве)')
-@UseGuards(JwtAuthGuard)
 export class GroupsController {
   constructor(private readonly groupsService: GroupsService) {}
 
   @Post('create')
+  @UseGuards(JwtAuthGuard)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'image', maxCount: 1 }], multerImageOptions),
@@ -55,6 +55,7 @@ export class GroupsController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'image', maxCount: 1 }], multerImageOptions),
@@ -72,6 +73,7 @@ export class GroupsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Удалить группу по id' })
   remove(@Param('id') id: string) {
     return this.groupsService.remove(+id);

@@ -24,6 +24,7 @@ export class BannerMainController {
   constructor(private readonly bannerMainService: BannerMainService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: CreateBannerMainDto })
   @ApiOperation({ summary: 'Создание нового баннера' })
@@ -38,14 +39,12 @@ export class BannerMainController {
     return this.bannerMainService.create(createBannerMainDto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get()
   @ApiOperation({ summary: 'Получение списка всех баннеров' })
   async findAll() {
     return this.bannerMainService.findAll();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get(':id')
   @ApiOperation({ summary: 'Получение баннера по ID' })
   async findOne(@Param('id') id: string) {
@@ -53,6 +52,7 @@ export class BannerMainController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: UpdateBannerMainDto })
   @ApiOperation({ summary: 'Обновление баннера' })
@@ -69,6 +69,7 @@ export class BannerMainController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Удаление баннера' })
   async remove(@Param('id') id: string) {
     return this.bannerMainService.remove(+id);

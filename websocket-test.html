@@ -38,11 +38,10 @@
             <h3>Обновление статуса</h3>
             <input type="number" id="orderIdInput" placeholder="ID заказа" value="1">
             <select id="statusSelect">
-                <option value="NEW">Новый</option>
-                <option value="IN_PROGRESS">В процессе</option>
-                <option value="READY">Готов</option>
-                <option value="DELIVERED">Доставлен</option>
-                <option value="CANCELLED">Отменен</option>
+                <option value="new">Новый</option>
+                <option value="completed">Готов</option>
+
+                <option value="cancelled">Отменен</option>
             </select>
             <button onclick="updateStatus()">Обновить</button>
         </div>

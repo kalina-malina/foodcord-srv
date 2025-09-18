@@ -14,9 +14,27 @@ import { Logger } from '@nestjs/common';
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
+    origin: [
+      'https://statosphera.ru',
+      'statosphera.ru',
+      'http://localhost:3000',
+    ],
+    methods: ['GET', 'POST'],
+    credentials: true,
+    allowedHeaders: [
+      'Content-Type',
+      'Accept',
+      'Authorization',
+      'Upgrade',
+      'Connection',
+      'Sec-WebSocket-Key',
+      'Sec-WebSocket-Version',
+      'Sec-WebSocket-Protocol',
+    ],
   },
   namespace: '/orders',
+  transports: ['websocket', 'polling'],
+  allowEIO3: true,
 })
 export class OrdersGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()

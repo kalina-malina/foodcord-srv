@@ -14,7 +14,7 @@ import { RedisSessionService } from './session/redis.session.service';
 import moment from 'moment';
 import { DatabaseService } from '@/pg-connect/foodcord/orm/grud-postgres.service';
 import { GRUD_OPERATION } from '@/pg-connect/foodcord/orm/enum/metod.enum';
-import { USER_ROLE } from '@/role/enum/role.enum';
+
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -32,7 +32,7 @@ export class AuthService {
     const result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
       query: `
-      SELECT id as "idUser", password_hash as hash
+      SELECT id as "idUser",role,id_store as "idStore", password_hash as hash
       FROM
           users
       WHERE
@@ -114,8 +114,8 @@ export class AuthService {
     );
     res.status(200).json({
       auth: true,
-      role: USER_ROLE.ADMIN,
-      store: { idStore: 1, name: 'Молодежный 2' },
+      role: user.role,
+      store: { idStore: user.idStore, name: 'Молодежный 2' },
     });
   }
 
