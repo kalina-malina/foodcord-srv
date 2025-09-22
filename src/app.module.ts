@@ -24,6 +24,7 @@ import { StoresModule } from './stores/stores.module';
 import { ProductIngridientsModule } from './product-ingridients/product-ingridients.module';
 import { OrdersModule } from './orders/orders.module';
 import { SendOrderModule } from './send-order/send-order.module';
+import { BannerTvModule } from './banner-tv/banner-tv.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { SendOrderModule } from './send-order/send-order.module';
     BannerMainModule,
     BannerLoyalityModule,
     BannerMenuModule,
+    BannerTvModule,
     StoresModule,
     ProductIngridientsModule,
     OrdersModule,
