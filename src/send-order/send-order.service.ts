@@ -16,7 +16,6 @@ export class SendOrderService {
   ) {
     try {
       const url = `${this.baseUrl}/${orderNumber}/shop/42002`; //${shopNumber}
-      console.log(url);
 
       const payload = {
         status: CREATE_ORDER_SET_ENUM.READY_TO_PAYMENT,

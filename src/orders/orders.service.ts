@@ -55,7 +55,6 @@ export class OrdersService {
         ],
         transaction: transaction,
       });
-      console.log(result.rows[0]);
       ///цена подставляем явно
       const price = 0.1;
 
