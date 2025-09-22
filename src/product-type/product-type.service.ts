@@ -15,7 +15,7 @@ export class ProductTypeService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, name,image FROM products_original WHERE type = $1',
+          'SELECT id::int,  name_original as name,image FROM products_original WHERE type = $1',
         params: [TYPE_PRODUCT_ENUM.TYPE],
       });
       if (result.rows.length === 0) {
@@ -37,7 +37,7 @@ export class ProductTypeService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, name, image FROM products_original WHERE type = $1 AND id = $2',
+          'SELECT id::int, name_original as name, image FROM products_original WHERE type = $1 AND id = $2',
         params: [TYPE_PRODUCT_ENUM.TYPE, id],
       });
       if (result.rows.length === 0) {
