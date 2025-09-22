@@ -8,7 +8,7 @@ export class createUserDTO {
   email: string;
 
   @IsNumber()
-  @ApiProperty({ example: 123 })
+  @ApiProperty({ example: 42002 })
   id_store: number;
 
   @IsString()

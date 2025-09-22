@@ -24,7 +24,7 @@ export class SetFactory {
     const config: PoolConfig = {
       host: configService.get('DB_SET_HOST') || 'localhost',
       port: safeParseInt(configService.get('DB_AUTH_PORT'), 5432),
-      database: configService.get('DB_SET_NAME'),
+      database: configService.get('DB_SET_NAME_SET'),
       user: configService.get('DB_SET_USER'),
       password: configService.get('DB_SET_PASSWORD'),
       max: 20,

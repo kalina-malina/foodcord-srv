@@ -23,6 +23,7 @@ import { ProductTypeModule } from './product-type/product-type.module';
 import { StoresModule } from './stores/stores.module';
 import { ProductIngridientsModule } from './product-ingridients/product-ingridients.module';
 import { OrdersModule } from './orders/orders.module';
+import { SendOrderModule } from './send-order/send-order.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { OrdersModule } from './orders/orders.module';
     StoresModule,
     ProductIngridientsModule,
     OrdersModule,
+    SendOrderModule,
   ],
   controllers: [],
   providers: [],

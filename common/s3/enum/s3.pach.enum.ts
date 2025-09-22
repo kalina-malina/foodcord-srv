@@ -9,4 +9,6 @@ export enum S3_PATCH_ENUM {
   BANNER_LOYALTY_VIDEO = 'banner_loyalty_video',
   BANNER_MENU_IMAGE = 'banner_menu_image',
   BANNER_MENU_VIDEO = 'banner_menu_video',
+  BANNER_TV_IMAGE = 'banner_tv_image',
+  BANNER_TV_VIDEO = 'banner_tv_video',
 }
