@@ -106,7 +106,7 @@ export class ProductIngridientsService {
   async remove(id: number) {
     try {
       await this.databaseService.executeOperation({
-        operation: GRUD_OPERATION.DELETE,
+        operation: GRUD_OPERATION.QUERY,
         query: 'DELETE FROM products_ingredients WHERE id = $1',
         params: [id],
       });
