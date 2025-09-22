@@ -21,7 +21,7 @@ export class ProductOriginslService {
       filtersGroups = ` AND group_code = '${groupCode}'`;
     }
     const query = `
-      SELECT id_product::int, name_original,ed, erpcode, deleted,
+      SELECT id_product::int, name_original, ed, erpcode, deleted,
       group_code, vat::int, group_name, image, description, name
       FROM products_original
       WHERE 1=1 ${filtersGroups}
