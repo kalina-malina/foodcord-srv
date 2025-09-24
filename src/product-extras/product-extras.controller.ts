@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, Param, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/auth/guards/auth.guard';
 import { ProductExtrasService } from './product-extras.service';
@@ -18,5 +18,11 @@ export class ProductExtrasController {
   @ApiOperation({ summary: 'Получить дополнительный продукт по id' })
   findOne(@Param('id') id: string) {
     return this.productExtrasService.findOne(+id);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Удалить допы продукта' })
+  async delete(@Param('id') id: number) {
+    return await this.productExtrasService.delete(id);
   }
 }

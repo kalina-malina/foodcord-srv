@@ -110,7 +110,7 @@ export class CreateProductMainDto {
 
   @ApiProperty({ description: 'Калории', example: 270 })
   @Transform(({ value }) => {
-    const num = parseInt(value);
+    const num = parseFloat(value);
     return isNaN(num) ? 0 : num;
   })
   @IsNumber()
