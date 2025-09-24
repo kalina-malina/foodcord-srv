@@ -87,7 +87,11 @@ export class ProductMainController {
   @ApiOperation({
     summary: 'Обновление продукта',
   })
-  update(@Param('id') id: number, @Body() updateProductMainDto: UpdateProductMainDto, @UploadedFiles() files: { image?: Express.Multer.File[] }) {
+  update(
+    @Param('id') id: number,
+    @Body() updateProductMainDto: UpdateProductMainDto,
+    @UploadedFiles() files: { image?: Express.Multer.File[] },
+  ) {
     if (files?.image?.[0]) {
       updateProductMainDto.image = files.image[0];
     }

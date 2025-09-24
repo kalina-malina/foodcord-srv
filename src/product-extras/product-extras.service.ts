@@ -79,17 +79,16 @@ export class ProductExtrasService {
 
       const currentImageUrl = existingProduct.rows[0].image;
       if (currentImageUrl && idProduct) {
-          const bucketName = this.configService.get('S3_BUCKET_NAME');
-          if (bucketName) {
-            const urlParts = currentImageUrl.split('/');
-            const urlFileName = urlParts[urlParts.length - 1];
+        const bucketName = this.configService.get('S3_BUCKET_NAME');
+        if (bucketName) {
+          const urlParts = currentImageUrl.split('/');
+          const urlFileName = urlParts[urlParts.length - 1];
 
-            const basePath = `foodcourt/${S3_PATCH_ENUM.PACH_PRODUCT_ORIGINAL_IMAGE}/`;
-            const fullPath = basePath + urlFileName;
+          const basePath = `foodcourt/${S3_PATCH_ENUM.PACH_PRODUCT_ORIGINAL_IMAGE}/`;
+          const fullPath = basePath + urlFileName;
 
-            await this.s3Storage.deleteFile(bucketName, fullPath);
-          }
-        
+          await this.s3Storage.deleteFile(bucketName, fullPath);
+        }
       }
 
       const result = await this.databaseService.executeOperation({

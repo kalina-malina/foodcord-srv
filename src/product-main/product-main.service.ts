@@ -368,13 +368,10 @@ export class ProductMainService {
       await this.databaseService.beginTransaction();
 
     try {
-     
       const currentImageUrl = existingProduct.image;
 
-     
       const { image, ...updateData } = dto;
 
-     
       if (Object.keys(updateData).length > 0) {
         await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
@@ -403,14 +400,14 @@ export class ProductMainService {
 
       if (image) {
         if (currentImageUrl) {
-            const bucketName = this.configService.get('S3_BUCKET_NAME');
-            if (bucketName && currentImageUrl.includes(bucketName)) {
-              const urlParts = currentImageUrl.split('/');
-              const fileName = urlParts[urlParts.length - 1];
-              const basePath = `foodcourt/${S3_PATCH_ENUM.BANNER_MAIN_IMAGE}/`;
+          const bucketName = this.configService.get('S3_BUCKET_NAME');
+          if (bucketName && currentImageUrl.includes(bucketName)) {
+            const urlParts = currentImageUrl.split('/');
+            const fileName = urlParts[urlParts.length - 1];
+            const basePath = `foodcourt/${S3_PATCH_ENUM.BANNER_MAIN_IMAGE}/`;
 
-              await this.s3Storage.deleteFile(bucketName, basePath + fileName);
-            }
+            await this.s3Storage.deleteFile(bucketName, basePath + fileName);
+          }
         }
 
         const bucketName = this.configService.get('S3_BUCKET_NAME');
