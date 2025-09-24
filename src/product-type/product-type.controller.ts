@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards, Delete } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ProductTypeService } from './product-type.service';
 import { JwtAuthGuard } from '@/auth/guards/auth.guard';
@@ -18,5 +18,11 @@ export class ProductTypeController {
   @ApiOperation({ summary: 'Получить тип продукта по id' })
   async findOne(@Param('id') id: string) {
     return await this.productTypeService.findOne(+id);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Удалить тип продукта' })
+  async delete(@Param('id') id: number) {
+    return await this.productTypeService.delete(id);
   }
 }

@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { PoolClient } from 'pg';
 import sharp from 'sharp';
 import { S3_PATCH_ENUM } from '@/s3/enum/s3.pach.enum';
+import { UpdateProductMainDto } from './dto/update-product-main.dto';
 
 @Injectable()
 export class ProductMainService {
@@ -183,9 +184,14 @@ export class ProductMainService {
               '[]'::jsonb
           ) AS groups,
           COALESCE(
-              ARRAY_AGG(DISTINCT po.name) FILTER (WHERE pm.id IS NOT NULL),
-              '{}'::text[]
-          ) AS subgroup,
+              JSONB_AGG(
+                  DISTINCT JSONB_BUILD_OBJECT(
+                      'id', gsub.id,
+                      'name', gsub.name
+                  )
+              ) FILTER (WHERE pm.id IS NOT NULL),
+              '[]'::jsonb
+          ) AS subgroups,
           COALESCE(
               JSONB_AGG(
                   DISTINCT JSONB_BUILD_OBJECT(
@@ -199,8 +205,12 @@ export class ProductMainService {
               '[]'::jsonb
           ) AS extras,
             COALESCE(
-              ARRAY_AGG(DISTINCT ing.name) FILTER (WHERE pm.id IS NOT NULL),
-              '{}'::text[]
+              JSONB_AGG(DISTINCT JSONB_BUILD_OBJECT(
+                      'id', ing.id,
+                      'name', ing.name
+                  )
+              ) FILTER (WHERE pm.id IS NOT NULL),
+              '[]'::jsonb
           ) AS ingredients,
           COALESCE(
               JSONB_AGG(
@@ -223,6 +233,7 @@ export class ProductMainService {
           ) AS information
       FROM products_main pm
       LEFT JOIN groups po ON po.id = ANY(pm.groups)
+      LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
       LEFT JOIN products_original typ ON typ.id = ANY(pm.type) and typ.type = 'type'
       LEFT JOIN products_original ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
       LEFT JOIN products_main inf ON inf.id = pm.id
@@ -263,9 +274,14 @@ export class ProductMainService {
               '[]'::jsonb
           ) AS groups,
           COALESCE(
-              ARRAY_AGG(DISTINCT po.name) FILTER (WHERE pm.id IS NOT NULL),
-              '{}'::text[]
-          ) AS subgroup,
+              JSONB_AGG(
+                  DISTINCT JSONB_BUILD_OBJECT(
+                      'id', gsub.id,
+                      'name', gsub.name
+                  )
+              ) FILTER (WHERE pm.id IS NOT NULL),
+              '[]'::jsonb
+          ) AS subgroups,
           COALESCE(
               JSONB_AGG(
                   DISTINCT JSONB_BUILD_OBJECT(
@@ -279,8 +295,12 @@ export class ProductMainService {
               '[]'::jsonb
           ) AS extras,
             COALESCE(
-              ARRAY_AGG(DISTINCT ing.name) FILTER (WHERE pm.id IS NOT NULL),
-              '{}'::text[]
+              JSONB_AGG(DISTINCT JSONB_BUILD_OBJECT(
+                      'id', ing.id,
+                      'name', ing.name
+                  )
+              ) FILTER (WHERE pm.id IS NOT NULL),
+              '[]'::jsonb
           ) AS ingredients,
           COALESCE(
               JSONB_AGG(
@@ -303,6 +323,7 @@ export class ProductMainService {
           ) AS information
       FROM products_main pm
       LEFT JOIN groups po ON po.id = ANY(pm.groups)
+      LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
       LEFT JOIN products_original typ ON typ.id = ANY(pm.type) and typ.type = 'type'
       LEFT JOIN products_original ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
       LEFT JOIN products_main inf ON inf.id = pm.id
@@ -338,5 +359,97 @@ export class ProductMainService {
     return {
       message: `Продукт ${id} успешно удален`,
     };
+  }
+
+  async update(id: number, dto: UpdateProductMainDto) {
+    const existingProduct = await this.findOne(id);
+
+    const transaction: PoolClient =
+      await this.databaseService.beginTransaction();
+
+    try {
+      const currentImageUrl = existingProduct.image;
+
+      const { image, ...updateData } = dto;
+
+      if (Object.keys(updateData).length > 0) {
+        await this.databaseService.executeOperation({
+          operation: GRUD_OPERATION.UPDATE,
+          table_name: 'products_main',
+          conflict: ['id'],
+          columnUpdate: [
+            'name',
+            'description',
+            'variant',
+            'groups',
+            'subgroups',
+            'ingredients',
+            'type',
+            'extras',
+            'composition',
+            'fats',
+            'proteins',
+            'carbohydrates',
+            'calories',
+            'color',
+          ],
+          data: [{ id, ...updateData }],
+          transaction: transaction,
+        });
+      }
+
+      if (image) {
+        if (currentImageUrl) {
+          const bucketName = this.configService.get('S3_BUCKET_NAME');
+          if (bucketName && currentImageUrl.includes(bucketName)) {
+            const urlParts = currentImageUrl.split('/');
+            const fileName = urlParts[urlParts.length - 1];
+            const basePath = `foodcourt/${S3_PATCH_ENUM.BANNER_MAIN_IMAGE}/`;
+
+            await this.s3Storage.deleteFile(bucketName, basePath + fileName);
+          }
+        }
+
+        const bucketName = this.configService.get('S3_BUCKET_NAME');
+        if (!bucketName) {
+          throw new Error('Отсутствуют настройки S3');
+        }
+
+        const basePath = `foodcourt/${S3_PATCH_ENUM.BANNER_MAIN_IMAGE}/`;
+        const fileName = `${id}.webp`;
+
+        const coverWebpBuffer = await sharp(image.buffer)
+          .webp({ quality: 90, lossless: true })
+          .toBuffer();
+
+        await this.s3Storage.uploadFile(
+          bucketName,
+          basePath + fileName,
+          coverWebpBuffer,
+          'image/webp',
+        );
+
+        const newImageUrl = `https://${this.configService.get('S3_BUCKET_ID')}.selstorage.ru/${basePath}${fileName}`;
+
+        await this.databaseService.executeOperation({
+          operation: GRUD_OPERATION.UPDATE,
+          table_name: 'products_main',
+          conflict: ['id'],
+          columnUpdate: ['image'],
+          transaction: transaction,
+          data: [{ id, image: newImageUrl }],
+        });
+      }
+
+      await this.databaseService.commitTransaction(transaction);
+      return {
+        message: `Продукт ${id} успешно обновлен`,
+      };
+    } catch (error: any) {
+      await this.databaseService.rollbackTransaction(transaction);
+      throw new BadRequestException(error.message);
+    } finally {
+      await this.databaseService.releaseClient(transaction);
+    }
   }
 }

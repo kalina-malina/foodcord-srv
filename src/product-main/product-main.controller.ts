@@ -8,6 +8,7 @@ import {
   UseGuards,
   Delete,
   Param,
+  Patch,
 } from '@nestjs/common';
 import { ProductMainService } from './product-main.service';
 import { CreateProductMainDto } from './dto/create-product-main.dto';
@@ -17,11 +18,13 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiBody,
 } from '@nestjs/swagger';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { multerImageOptions } from '@/s3/multer.config';
 import { ResponseProductMainDto } from './dto/response-product-main.dto';
 import { JwtAuthGuard } from '@/auth/guards/auth.guard';
+import { UpdateProductMainDto } from './dto/update-product-main.dto';
 
 @ApiTags('Продукты для отображения на устройстве')
 @Controller('product-main')
@@ -72,5 +75,26 @@ export class ProductMainController {
   })
   remove(@Param('id') id: string) {
     return this.productMainService.remove(+id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileFieldsInterceptor([{ name: 'image', maxCount: 1 }], multerImageOptions),
+  )
+  @ApiBody({ type: UpdateProductMainDto })
+  @ApiOperation({
+    summary: 'Обновление продукта',
+  })
+  update(
+    @Param('id') id: number,
+    @Body() updateProductMainDto: UpdateProductMainDto,
+    @UploadedFiles() files: { image?: Express.Multer.File[] },
+  ) {
+    if (files?.image?.[0]) {
+      updateProductMainDto.image = files.image[0];
+    }
+    return this.productMainService.update(id, updateProductMainDto);
   }
 }
