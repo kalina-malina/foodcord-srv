@@ -31,11 +31,13 @@ export class OrdersService {
         id: Number(product.id),
         name: String(product.name),
         count: Number(product.count),
+        price: Number(product.price),
         ...(product.include && {
           include: product.include.map((item) => ({
             id: Number(item.id),
             name: String(item.name),
             count: Number(item.count),
+            price: Number(item.price),
           })),
         }),
         ...(product.exclude && { exclude: String(product.exclude) }),
@@ -56,14 +58,13 @@ export class OrdersService {
         transaction: transaction,
       });
       ///цена подставляем явно
-      const price = 0.1;
 
       const productPositions = normalizedProducts.map((product, index) => ({
         positionOrder: index + 1,
         code: product.id.toString(),
         quantity: product.count,
-        unitPrice: price,
-        totalPrice: price * product.count,
+        unitPrice: product.price,
+        totalPrice: product.price * product.count,
         discountValue: 0,
         isFixedPrice: true,
         calculationMethod: 4,
