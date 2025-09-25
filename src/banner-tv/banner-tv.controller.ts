@@ -8,7 +8,6 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
-  UseGuards,
 } from '@nestjs/common';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BannerTvService } from './banner-tv.service';
@@ -16,7 +15,6 @@ import { CreateBannerTvDto } from './dto/create-banner-tv.dto';
 import { UpdateBannerTvDto } from './dto/update-banner-tv.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerUniversalOptions } from '@/s3/multer.config';
-import { JwtAuthGuard } from '@/auth/guards/auth.guard';
 
 @ApiTags('Баннеры TV')
 @Controller('banner-tv')
@@ -40,14 +38,12 @@ export class BannerTvController {
 
   @Get()
   @ApiOperation({ summary: 'Получение списка всех баннеров TV' })
-  @UseGuards(JwtAuthGuard)
   findAll() {
     return this.bannerTvService.findAll();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Получение баннера TV по ID' })
-  @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: number) {
     return this.bannerTvService.findOne(id);
   }
