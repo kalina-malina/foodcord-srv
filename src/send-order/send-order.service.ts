@@ -15,7 +15,7 @@ export class SendOrderService {
     createSendOrderDto: PositionDto[],
   ) {
     try {
-      const url = `${this.baseUrl}/${orderNumber}/shop/42002`; //${shopNumber}
+      const url = `${this.baseUrl}/${orderNumber}/shop/${shopNumber}`; //${shopNumber}
 
       const payload = {
         status: CREATE_ORDER_SET_ENUM.READY_TO_PAYMENT,
@@ -33,7 +33,7 @@ export class SendOrderService {
           ) / 10,
         positions: createSendOrderDto.map((position) => ({
           positionOrder: createSendOrderDto.indexOf(position) + 1,
-          code: '125195', //position.code ||
+          code: position.code, //'125195', //position.code ||
           quantity: position.quantity || 1,
           unitPrice: position.unitPrice || 0.1,
           totalPrice:
