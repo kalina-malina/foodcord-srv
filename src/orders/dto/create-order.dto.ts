@@ -20,6 +20,10 @@ export class ProductIncludeDto {
   @ApiProperty({ description: 'Количество дополнения' })
   @IsNumber()
   count: number;
+
+  @ApiProperty({ description: 'Цена дополнения' })
+  @IsNumber()
+  price: number;
 }
 
 export class ProductDto {
@@ -34,6 +38,10 @@ export class ProductDto {
   @ApiProperty({ description: 'Количество продукта' })
   @IsNumber()
   count: number;
+
+  @ApiProperty({ description: 'Цена продукта' })
+  @IsNumber()
+  price: number;
 
   @ApiProperty({
     description: 'Дополнения к продукту',
@@ -63,6 +71,7 @@ export class CreateOrderDto {
         id: 125195,
         name: 'Салатик курица',
         count: 2,
+        price: 100,
         include: [
           {
             id: 1,
