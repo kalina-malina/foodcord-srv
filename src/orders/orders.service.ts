@@ -129,7 +129,6 @@ export class OrdersService {
        ORDER BY create_at DESC`,
     });
 
-    // Проверяем, что result.rows существует и является массивом
     if (!result || !result.rows || !Array.isArray(result.rows)) {
       this.logger.warn(
         'Результат запроса не содержит rows или rows не является массивом',

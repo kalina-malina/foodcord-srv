@@ -2,6 +2,7 @@ import { Controller, Post, Body, Param, Get, Logger } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CreateOrderDto } from './dto/create-order.dto';
 
 @Controller('orders')
 @ApiTags('Заказы')
@@ -14,11 +15,10 @@ export class OrdersController {
   @ApiOperation({ summary: 'Создание заказа' })
   @ApiResponse({ status: 201, description: 'Заказ успешно создан' })
   @ApiResponse({ status: 400, description: 'Некорректные данные' })
-  async create(@Body() createOrderDto: any) {
-    this.logger.log(
-      'Получен запрос на создание заказа:',
-      JSON.stringify(createOrderDto, null, 2),
-    );
+  async create(@Body() createOrderDto: CreateOrderDto) {
+    this.logger.log('Тип данных:', typeof createOrderDto);
+    this.logger.log('Ключи объекта:', Object.keys(createOrderDto));
+
     return await this.ordersService.create(createOrderDto);
   }
 
