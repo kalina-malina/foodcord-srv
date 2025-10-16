@@ -10,6 +10,9 @@ import { TYPE_PRODUCT_ENUM } from '@/product-original/enum/type-prodict.enum';
 import { S3_PATCH_ENUM } from '@/s3/enum/s3.pach.enum';
 import { ConfigService } from '@nestjs/config';
 import { S3StorageService } from '@/s3/storage.service';
+import { UpdateProductExtrasDto } from './dto/update-product-extras.dto';
+import { UploadPhotoService } from '@/s3/upload-photo';
+import { PoolClient } from 'pg';
 
 @Injectable()
 export class ProductExtrasService {
@@ -17,13 +20,14 @@ export class ProductExtrasService {
     private readonly databaseService: DatabaseService,
     private readonly configService: ConfigService,
     private readonly s3Storage: S3StorageService,
+    private readonly uploadPhotoService: UploadPhotoService,
   ) {}
   async findAll() {
     try {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, name_original as name,image FROM products_original WHERE type = $1',
+          'SELECT id::int, name_original as name, description, weight::int, price::int, type, image FROM products_original WHERE type = $1',
         params: [TYPE_PRODUCT_ENUM.EXTRAS],
       });
       if (result.rows.length === 0) {
@@ -45,7 +49,7 @@ export class ProductExtrasService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, name_original as name, image FROM products_original WHERE type = $1 AND id = $2',
+          'SELECT id::int, name_original as name, description, weight::int, price::int, type, image FROM products_original WHERE type = $1 AND id = $2',
         params: [TYPE_PRODUCT_ENUM.EXTRAS, id],
       });
       if (result.rows.length === 0) {
@@ -59,6 +63,102 @@ export class ProductExtrasService {
       throw new BadGatewayException(
         `ошибка при получении дополнительного продукта: ${error.message}`,
       );
+    }
+  }
+
+  async update(id: number, updateProductExtrasDto: UpdateProductExtrasDto) {
+    const transaction: PoolClient =
+      await this.databaseService.beginTransaction();
+    try {
+      const existingProduct = await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query:
+          'SELECT id, name_original, description, image, price, weight FROM products_original WHERE type = $1 AND id = $2',
+        params: [TYPE_PRODUCT_ENUM.EXTRAS, id],
+        transaction: transaction,
+      });
+
+      if (existingProduct.rows.length === 0) {
+        throw new NotFoundException('Дополнительный продукт не найден');
+      }
+
+      const { name, description, price, weight, image, type } =
+        updateProductExtrasDto;
+
+      const updateData: any = { id };
+      const columnUpdate: string[] = [];
+
+      if (name !== undefined) {
+        updateData.name = name;
+        columnUpdate.push('name');
+      }
+
+      if (description !== undefined) {
+        updateData.description = description;
+        columnUpdate.push('description');
+      }
+
+      if (price !== undefined) {
+        updateData.price = price;
+        columnUpdate.push('price');
+      }
+
+      if (weight !== undefined) {
+        updateData.weight = weight;
+        columnUpdate.push('weight');
+      }
+
+      if (type !== undefined) {
+        updateData.type = type;
+        columnUpdate.push('type');
+      }
+
+      if (columnUpdate.length > 0) {
+        await this.databaseService.executeOperation({
+          operation: GRUD_OPERATION.UPDATE,
+          table_name: 'products_original',
+          conflict: ['id'],
+          columnUpdate: columnUpdate,
+          data: [updateData],
+          transaction: transaction,
+        });
+      }
+
+      if (image) {
+        const urlImage = await this.uploadPhotoService.uploadPhoto(
+          image,
+          S3_PATCH_ENUM.PACH_PRODUCT_ORIGINAL_IMAGE,
+          id.toString(),
+        );
+
+        if (urlImage) {
+          await this.databaseService.executeOperation({
+            operation: GRUD_OPERATION.UPDATE,
+            table_name: 'products_original',
+            conflict: ['id'],
+            columnUpdate: ['image'],
+            data: [{ id, image: urlImage }],
+            transaction: transaction,
+          });
+        }
+      }
+
+      await this.databaseService.commitTransaction(transaction);
+
+      return {
+        success: true,
+        message: `Дополнительный продукт ${id} успешно обновлен`,
+      };
+    } catch (error: any) {
+      await this.databaseService.rollbackTransaction(transaction);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadGatewayException(
+        `Ошибка при обновлении дополнительного продукта: ${error.message}`,
+      );
+    } finally {
+      await this.databaseService.releaseClient(transaction);
     }
   }
 

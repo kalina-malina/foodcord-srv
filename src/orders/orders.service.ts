@@ -123,11 +123,12 @@ export class OrdersService {
       query: `SELECT id::int, id_store::int, phone_number,
        products, status, receiving_method,
        TO_CHAR(create_at, 'DD.MM.YYYY, HH24:MI:SS') as create_at,
-       TO_CHAR(updated_at, 'DD.MM.YYYY, HH24:MI:SS') as updated_at 
-       FROM orders ORDER BY create_at DESC`,
+       TO_CHAR(updated_at, 'DD.MM.YYYY, HH24:MI:SS') as updated_at
+       FROM orders
+       where date(create_at) = current_date
+       ORDER BY create_at DESC`,
     });
 
-    // Проверяем, что result.rows существует и является массивом
     if (!result || !result.rows || !Array.isArray(result.rows)) {
       this.logger.warn(
         'Результат запроса не содержит rows или rows не является массивом',
