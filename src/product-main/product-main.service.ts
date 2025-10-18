@@ -195,7 +195,7 @@ export class ProductMainService {
           COALESCE(
               JSONB_AGG(
                   DISTINCT JSONB_BUILD_OBJECT(
-                      'id', ext.id,
+                      'id', ext.id_product,
                       'name', ext.name,
                       'price', ext.price,
                       'image', ext.image,
@@ -215,7 +215,7 @@ export class ProductMainService {
           COALESCE(
               JSONB_AGG(
                   DISTINCT JSONB_BUILD_OBJECT(
-                      'id', typ.id,
+                      'id', typ.id_product,
                       'name', typ.name,
                       'price', typ.price,
                       'weight', typ.weight
@@ -285,7 +285,7 @@ export class ProductMainService {
           COALESCE(
               JSONB_AGG(
                   DISTINCT JSONB_BUILD_OBJECT(
-                      'id', ext.id,
+                      'id', ext.id_product,
                       'name', ext.name,
                       'price', ext.price,
                       'image', ext.image,
@@ -305,7 +305,7 @@ export class ProductMainService {
           COALESCE(
               JSONB_AGG(
                   DISTINCT JSONB_BUILD_OBJECT(
-                      'id', typ.id,
+                      'id', typ.id_product,
                       'name', typ.name,
                       'price', typ.price,
                       'weight', typ.weight
