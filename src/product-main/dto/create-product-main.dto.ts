@@ -6,7 +6,6 @@ import {
   IsOptional,
   ValidateNested,
   IsEnum,
-  IsBoolean,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -120,10 +119,6 @@ export class CreateProductMainDto {
   @ApiProperty({ description: 'цвета подложки фото продукта' })
   @IsString()
   color: string;
-
-  @ApiProperty({ description: 'Является ли комбо', example: false })
-  @IsBoolean()
-  isCombo: boolean;
 }
 
 export class CreateProductTypeDto {
