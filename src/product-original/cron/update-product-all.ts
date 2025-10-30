@@ -33,7 +33,6 @@ export class UpdateProductAllCron {
    * Получение всех продуктов из базы данных
    */
   async getAllOriginslProducts() {
-    // Promise<Product[]>
     try {
       const query = `
         SELECT
@@ -48,7 +47,7 @@ export class UpdateProductAllCron {
             FROM un_cg_product as p
             full outer join un_cg_measure as g on  p.measure_code = g.code
             left join un_cg_group as groups on p.group_code = groups.code
-            where (groups.name ilike '%200.%' or groups.name ilike  '%Лимонады%' or groups.name ilike  '%Кофе%') and lower(groups.name) not ilike '%выведенные%'
+            where (groups.name ilike '%200.%' or groups.name ilike  '%Лимонады%' or groups.name ilike '%Кофе%') and lower(groups.name) not ilike '%выведенные%'
             order by p.markingofthegood asc
       `;
 
