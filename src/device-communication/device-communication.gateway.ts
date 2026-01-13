@@ -59,9 +59,13 @@ export class DeviceCommunicationGateway
       idStore: idStore,
     });
   }
-
-  @SubscribeMessage('get_orders')
-  async handleGetOrders() {} //@ConnectedSocket() client: Socket
+  @SubscribeMessage('leave_pairing_room')
+  handleLeavePairingRoom(
+    @MessageBody() roomName: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.leave(roomName);
+  }
 
   @SubscribeMessage('join_pairing_room')
   handleJoinPairingRoom(

@@ -80,6 +80,11 @@ export class OrdersGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.to('orders_room').emit('new_order', order);
   }
 
+  notifyNewOrderToStore(order: any, idStore: number) {
+    this.logger.log(`📢 новый заказ:${order.orderId}. Магазин: ${idStore}`);
+    this.server.to(`orders_room`).emit(`new_order_${idStore}`, order);
+  }
+
   // Обновить статус заказа
   @SubscribeMessage('update_order_status')
   async handleUpdateOrderStatus(
@@ -111,9 +116,12 @@ export class OrdersGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // Получить все заказы
   @SubscribeMessage('get_orders')
-  async handleGetOrders(@ConnectedSocket() client: Socket) {
+  async handleGetOrders(
+    @MessageBody() idStore: number,
+    @ConnectedSocket() client: Socket,
+  ) {
     try {
-      const orders = await this.ordersService.findAll();
+      const orders = await this.ordersService.findAllStoreOrders(idStore);
       client.emit('orders_list', orders);
       return { success: true };
     } catch (error) {

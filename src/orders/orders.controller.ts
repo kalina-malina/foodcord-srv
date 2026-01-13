@@ -33,4 +33,10 @@ export class OrdersController {
   async findAll() {
     return await this.ordersService.findAll();
   }
+
+  @Get('all-store-orders/:idStore')
+  @ApiOperation({ summary: 'Получение всех заказов магазина' })
+  async findAllStoreOrders(@Param('idStore') idStore: number) {
+    return await this.ordersService.findAllStoreOrders(idStore);
+  }
 }

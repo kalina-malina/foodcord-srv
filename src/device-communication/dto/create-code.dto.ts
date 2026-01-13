@@ -8,6 +8,13 @@ export class CreateCodeDto {
   idStore?: number;
 }
 
+export class CreateCodeTvDto {
+  @ApiProperty({ description: 'Код' })
+  @IsNumber()
+  @IsOptional()
+  code: number;
+}
+
 export class FindCodeDto {
   @ApiProperty({ description: 'Код' })
   @IsNumber()

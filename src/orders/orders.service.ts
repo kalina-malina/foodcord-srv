@@ -4,16 +4,23 @@ import { DatabaseService } from '@/pg-connect/foodcord/orm/grud-postgres.service
 import { GRUD_OPERATION } from '@/pg-connect/foodcord/orm/enum/metod.enum';
 import { ORDERS_STATUS } from './enum/orders-status.enum';
 import { SendOrderService } from '@/send-order/send-order.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class OrdersService {
   private ordersGateway: any;
   private readonly logger = new Logger(OrdersService.name);
-
+  private orderTable: string;
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly sendOrderService: SendOrderService,
-  ) {}
+    private configService: ConfigService,
+  ) {
+    this.orderTable =
+      this.configService.get<string>('SERVER') === 'PROD'
+        ? 'orders'
+        : 'orders_test';
+  }
 
   setGateway(gateway: any) {
     this.ordersGateway = gateway;
@@ -47,7 +54,7 @@ export class OrdersService {
 
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query: `INSERT INTO orders (id_store, phone_number, products, status, receiving_method, create_at, updated_at) VALUES ($1, $2, $3::json, $4, $5, NOW(), NOW()) RETURNING *`,
+        query: `INSERT INTO ${this.orderTable} (id_store, phone_number, products, status, receiving_method, create_at, updated_at) VALUES ($1, $2, $3::json, $4, $5, NOW(), NOW()) RETURNING *`,
         params: [
           createOrderDto.idStore,
           createOrderDto.phoneNumber || null,
@@ -59,29 +66,29 @@ export class OrdersService {
       });
       ///цена подставляем явно
 
-      const productPositions = normalizedProducts.map((product, index) => ({
-        positionOrder: index + 1,
-        code: product.id.toString(),
-        quantity: product.count,
-        unitPrice: product.price,
-        totalPrice: product.price * product.count,
-        discountValue: 0,
-        isFixedPrice: true,
-        calculationMethod: 4,
-      }));
+      // const productPositions = normalizedProducts.map((product, index) => ({
+      //   positionOrder: index + 1,
+      //   code: product.id.toString(),
+      //   quantity: product.count,
+      //   unitPrice: product.price,
+      //   totalPrice: product.price * product.count,
+      //   discountValue: 0,
+      //   isFixedPrice: true,
+      //   calculationMethod: 4,
+      // }));
 
       // Отправляем заказ в SetRetail10
-      const sendResult = await this.sendOrderService.sendOrder(
-        `IM${result.rows[0]?.id}`,
-        result.rows[0]?.id_store,
-        productPositions,
-      );
-      if (!sendResult.success) {
-        return {
-          message: `Ошибка при отправке заказа в SetRetail10 ${sendResult.status} ${sendResult.data}`,
-          error: sendResult.message,
-        };
-      }
+      // const sendResult = await this.sendOrderService.sendOrder(
+      //   `IM${result.rows[0]?.id}`,
+      //   result.rows[0]?.id_store,
+      //   productPositions,
+      // );
+      // if (!sendResult.success) {
+      //   return {
+      //     message: `Ошибка при отправке заказа в SetRetail10 ${sendResult.status} ${sendResult.data}`,
+      //     error: sendResult.message,
+      //   };
+      // }
 
       // const orderData = {
       //   message: 'Заказ создан',
@@ -103,7 +110,10 @@ export class OrdersService {
       await this.databaseService.commitTransaction(transaction);
 
       if (this.ordersGateway) {
-        this.ordersGateway.notifyNewOrder(orderData);
+        this.ordersGateway.notifyNewOrderToStore(
+          orderData,
+          result.rows[0]?.id_store,
+        );
       }
 
       return orderData;
@@ -124,9 +134,73 @@ export class OrdersService {
        products, status, receiving_method,
        TO_CHAR(create_at, 'DD.MM.YYYY, HH24:MI:SS') as create_at,
        TO_CHAR(updated_at, 'DD.MM.YYYY, HH24:MI:SS') as updated_at
-       FROM orders
+       FROM ${this.orderTable}
        where date(create_at) = current_date
        ORDER BY create_at DESC`,
+    });
+
+    if (!result || !result.rows || !Array.isArray(result.rows)) {
+      this.logger.warn(
+        'Результат запроса не содержит rows или rows не является массивом',
+      );
+      return [];
+    }
+
+    // Парсим JSON для каждого заказа и обогащаем данными о продуктах
+    const orders = await Promise.all(
+      result.rows.map(async (order: any) => {
+        const products =
+          typeof order.products === 'string'
+            ? JSON.parse(order.products)
+            : order.products;
+
+        // Получаем названия продуктов для каждого продукта в заказе
+        const enrichedProducts = await Promise.all(
+          products.map(async (product: any) => {
+            try {
+              const productResult = await this.databaseService.executeOperation(
+                {
+                  operation: GRUD_OPERATION.QUERY,
+                  query: `SELECT name_original FROM products_original WHERE id = $1`,
+                  params: [product.id],
+                },
+              );
+
+              return {
+                ...product,
+                name_original: productResult.rows[0]?.name_original || null,
+              };
+            } catch {
+              return {
+                ...product,
+                name_original: null,
+              };
+            }
+          }),
+        );
+
+        return {
+          ...order,
+          products: enrichedProducts,
+        };
+      }),
+    );
+
+    return orders;
+  }
+
+  async findAllStoreOrders(idStore: number) {
+    const result = await this.databaseService.executeOperation({
+      operation: GRUD_OPERATION.QUERY,
+      query: `SELECT id::int, id_store::int, phone_number,
+       products, status, receiving_method,
+       TO_CHAR(create_at, 'DD.MM.YYYY, HH24:MI:SS') as create_at,
+       TO_CHAR(updated_at, 'DD.MM.YYYY, HH24:MI:SS') as updated_at
+       FROM ${this.orderTable}
+       where date(create_at) = current_date
+       and id_store = $1
+       ORDER BY create_at DESC`,
+      params: [idStore],
     });
 
     if (!result || !result.rows || !Array.isArray(result.rows)) {
@@ -185,7 +259,7 @@ export class OrdersService {
       query: `SELECT id::int, id_store::int, phone_number, products, status, receiving_method,
       TO_CHAR(create_at, 'DD.MM.YYYY, HH24:MI:SS') as create_at,
       TO_CHAR(updated_at, 'DD.MM.YYYY, HH24:MI:SS') as updated_at 
-      FROM orders WHERE id = $1`,
+      FROM ${this.orderTable} WHERE id = $1`,
       params: [id],
     });
 
@@ -239,7 +313,7 @@ export class OrdersService {
   async updateStatus(orderId: number, status: ORDERS_STATUS) {
     const result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
-      query: `UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
+      query: `UPDATE ${this.orderTable} SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
       params: [status, orderId],
     });
 
