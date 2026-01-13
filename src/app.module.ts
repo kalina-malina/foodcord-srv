@@ -25,6 +25,7 @@ import { ProductIngridientsModule } from './product-ingridients/product-ingridie
 import { OrdersModule } from './orders/orders.module';
 import { SendOrderModule } from './send-order/send-order.module';
 import { BannerTvModule } from './banner-tv/banner-tv.module';
+import { DeviceCommunicationModule } from './device-communication/device-communication.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { BannerTvModule } from './banner-tv/banner-tv.module';
     ProductIngridientsModule,
     OrdersModule,
     SendOrderModule,
+    DeviceCommunicationModule,
   ],
   controllers: [],
   providers: [],

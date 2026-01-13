@@ -6,6 +6,8 @@ import {
   //ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  ConnectedSocket,
+  MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
@@ -13,11 +15,7 @@ import { DeviceCommunicationService } from './device-communication.service';
 
 @WebSocketGateway({
   cors: {
-    origin: [
-      'https://statosphera.ru',
-      'statosphera.ru',
-      'http://localhost:3000',
-    ],
+    origin: true,
     methods: ['GET', 'POST'],
     credentials: true,
     allowedHeaders: [
@@ -49,12 +47,27 @@ export class DeviceCommunicationGateway
 
   async handleConnection(client: Socket) {
     client.join('device-communication_room');
+    this.logger.log(`Телевизор подключился: ${client.id}`);
   }
 
   handleDisconnect(client: Socket) {
-    this.logger.log(`❌ клиент отключился: ${client.id}`);
+    this.logger.log(`❌ Телевизор отключился: ${client.id}`);
+  }
+
+  sendIdStoreToMessage(code: number, idStore: number) {
+    this.server.to(`code_${code}`).emit('store_assigned', {
+      idStore: idStore,
+    });
   }
 
   @SubscribeMessage('get_orders')
   async handleGetOrders() {} //@ConnectedSocket() client: Socket
+
+  @SubscribeMessage('join_pairing_room')
+  handleJoinPairingRoom(
+    @MessageBody() code: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.join(`code_${code}`);
+  }
 }
