@@ -56,7 +56,7 @@ export class UpdateProductAllCron {
       if (result.rows.length > 0) {
         const updateProduct = await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.INSERT_ON_UPDAETE,
-          table_name: 'products_original',
+          table_name: 'products_original_test',
           data: result.rows,
           conflict: ['id_product'],
           columnUpdate: [

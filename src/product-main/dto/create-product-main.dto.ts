@@ -120,7 +120,14 @@ export class CreateProductMainDto {
   @IsString()
   color: string;
 }
-
+export class CreateProductMainAndStoreDto extends CreateProductMainDto {
+  @ApiProperty({ description: 'Номер магазина', example: 42014 })
+  @Transform(({ value }) => {
+    return parseFloat(value);
+  })
+  @IsNumber()
+  idStore: number;
+}
 export class CreateProductTypeDto {
   @ApiProperty({ description: 'Название типа', example: '25 см' })
   @IsString()

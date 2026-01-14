@@ -122,7 +122,7 @@ export class OrdersGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     try {
       const orders = await this.ordersService.findAllStoreOrders(idStore);
-      client.emit('orders_list', orders);
+      client.emit(`orders_list_${idStore}`, orders);
       return { success: true };
     } catch (error) {
       this.logger.error('❌ ошибка при получении заказов:', error);
