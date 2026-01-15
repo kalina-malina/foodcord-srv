@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import {
   CreateProductMainAndStoreDto,
-  CreateProductMainDto,
 } from './dto/create-product-main.dto';
 import { DatabaseService } from '@/pg-connect/foodcord/orm/grud-postgres.service';
 import { GRUD_OPERATION } from '@/pg-connect/foodcord/orm/enum/metod.enum';
@@ -24,154 +23,7 @@ export class ProductMainService {
     private configService: ConfigService,
   ) {}
 
-  async create(createProductMainDto: CreateProductMainDto): Promise<{
-    message: string;
-  }> {
-    const {
-      name,
-      variant,
-      groups,
-      subgroups,
-
-      ingredients,
-      description,
-      image,
-      composition,
-      fats,
-      proteins,
-      carbohydrates,
-      calories,
-      type,
-      color,
-      extras,
-    } = createProductMainDto;
-
-    if (
-      !name ||
-      !variant ||
-      !description ||
-      !image ||
-      !composition ||
-      !fats ||
-      !proteins ||
-      !carbohydrates ||
-      !calories ||
-      !groups ||
-      !subgroups ||
-      !ingredients ||
-      !type ||
-      !color ||
-      !extras
-    ) {
-      return {
-        message: 'Не все поля заполнены',
-      };
-    }
-    const transaction: PoolClient =
-      await this.databaseService.beginTransaction();
-    try {
-      //проверка сушествования в базе названия
-      const checkName = await this.databaseService.executeOperation({
-        operation: GRUD_OPERATION.QUERY,
-        query: `SELECT id FROM products_main WHERE lower(name) = lower('${name}')`,
-      });
-      if (checkName.length > 0) {
-        throw new ConflictException('Название продукта уже существует');
-      }
-
-      const result = await this.databaseService.executeOperation({
-        operation: GRUD_OPERATION.INSERT,
-        table_name: 'products_main',
-        conflict: ['name'],
-        columnUpdate: [
-          'name',
-          'variant',
-          'description',
-          'groups',
-          'subgroups',
-          'ingredients',
-          'type',
-          'color',
-          'extras',
-          'composition',
-          'fats',
-          'proteins',
-          'carbohydrates',
-          'calories',
-        ],
-        transaction: transaction,
-        data: [
-          {
-            name,
-            variant: variant,
-            description,
-            groups,
-            subgroups,
-            type,
-            color,
-            extras,
-            ingredients,
-            composition,
-            fats,
-            proteins,
-            carbohydrates,
-            calories,
-          },
-        ],
-      });
-      if (result && result.length > 0) {
-        let urlImage = null;
-        if (createProductMainDto.image) {
-          const bucketName = this.configService.get('S3_BUCKET_NAME');
-          if (!bucketName) {
-            throw new Error('Отсутствуют настройки S3');
-          }
-          const basePath = `foodcourt/${S3_PATCH_ENUM.BANNER_MAIN_IMAGE}/`;
-
-          const fileName = `${result[0].id}.webp`;
-
-          await this.s3Storage.deleteFile(bucketName, basePath + fileName);
-
-          const coverWebpBuffer = await sharp(createProductMainDto.image.buffer)
-            .webp({ quality: 90, lossless: true })
-            .toBuffer();
-
-          await this.s3Storage.uploadFile(
-            bucketName,
-            basePath + fileName,
-            coverWebpBuffer,
-            'image/webp',
-          );
-          urlImage = `https://${this.configService.get('S3_BUCKET_ID')}.selstorage.ru/${basePath}${fileName}`;
-        }
-
-        await this.databaseService.executeOperation({
-          operation: GRUD_OPERATION.UPDATE,
-          table_name: 'products_main',
-          conflict: ['id'],
-          columnUpdate: ['image'],
-          transaction: transaction,
-          data: [{ id: +result[0].id, image: urlImage }],
-        });
-
-        await this.databaseService.commitTransaction(transaction);
-        return {
-          message: `Продукт ${name} успешно создан с id ${result[0].id}`,
-        };
-      }
-
-      throw new BadRequestException('Продукт не создан');
-    } catch (error: any) {
-      await this.databaseService.rollbackTransaction(transaction);
-      throw new BadRequestException(error.message);
-    } finally {
-      await this.databaseService.releaseClient(transaction);
-    }
-  }
-
-  async createPerStore(
-    createProductMainAndStoreDto: CreateProductMainAndStoreDto,
-  ): Promise<{
+  async create(createProductMainDto: CreateProductMainAndStoreDto): Promise<{
     message: string;
   }> {
     const {
@@ -192,7 +44,7 @@ export class ProductMainService {
       color,
       extras,
       idStore,
-    } = createProductMainAndStoreDto;
+    } = createProductMainDto;
 
     if (
       !name ||
@@ -216,22 +68,23 @@ export class ProductMainService {
         message: 'Не все поля заполнены',
       };
     }
+    const id_store = idStore;
     const transaction: PoolClient =
       await this.databaseService.beginTransaction();
     try {
       //проверка сушествования в базе названия
       const checkName = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query: `SELECT id FROM products_main_test WHERE lower(name) = lower('${name}') and id_store = ${idStore}`,
+        query: `SELECT id FROM products_main_test WHERE lower(name) = lower('${name}')`,
       });
       if (checkName.length > 0) {
         throw new ConflictException('Название продукта уже существует');
       }
-      const id_store = idStore;
+
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.INSERT,
         table_name: 'products_main_test',
-        conflict: ['name', 'id_store'],
+        conflict: ['name'],
         columnUpdate: [
           'name',
           'variant',
@@ -272,7 +125,7 @@ export class ProductMainService {
       });
       if (result && result.length > 0) {
         let urlImage = null;
-        if (createProductMainAndStoreDto.image) {
+        if (createProductMainDto.image) {
           const bucketName = this.configService.get('S3_BUCKET_NAME');
           if (!bucketName) {
             throw new Error('Отсутствуют настройки S3');
@@ -283,9 +136,7 @@ export class ProductMainService {
 
           await this.s3Storage.deleteFile(bucketName, basePath + fileName);
 
-          const coverWebpBuffer = await sharp(
-            createProductMainAndStoreDto.image.buffer,
-          )
+          const coverWebpBuffer = await sharp(createProductMainDto.image.buffer)
             .webp({ quality: 90, lossless: true })
             .toBuffer();
 
@@ -353,7 +204,7 @@ export class ProductMainService {
                   DISTINCT JSONB_BUILD_OBJECT(
                       'id', ext.id_product,
                       'name', ext.name,
-                      'price', ext.price,
+                      'price', etype.price,
                       'image', ext.image,
                       'weight', ext.weight
                   )
@@ -373,7 +224,7 @@ export class ProductMainService {
                   DISTINCT JSONB_BUILD_OBJECT(
                       'id', typ.id_product,
                       'name', typ.name,
-                      'price', typ.price,
+                      'price', ptype.price,
                       'weight', typ.weight
                   )
               ) FILTER (WHERE pm.id IS NOT NULL),
@@ -386,13 +237,16 @@ export class ProductMainService {
               'proteins', pm.proteins::numeric,
               'carbohydrates', pm.carbohydrates::numeric,
               'calories', pm.calories::numeric
-          ) AS information
-      FROM products_main pm
+          ) AS information,
+           pm.id_store::int[] as "IdStore"
+      FROM products_main_test pm
       LEFT JOIN groups po ON po.id = ANY(pm.groups)
       LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
       LEFT JOIN products_original typ ON typ.id = ANY(pm.type) and typ.type = 'type'
       LEFT JOIN products_original ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
-      LEFT JOIN products_main inf ON inf.id = pm.id
+      LEFT JOIN product_original_store_price ptype on typ.id_product = ptype.id_product and ptype.id_store = ANY(pm.id_store)
+      LEFT JOIN product_original_store_price etype on ext.id_product = etype.id_product and etype.id_store = ANY(pm.id_store)
+      LEFT JOIN products_main_test inf ON inf.id = pm.id
       LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
       GROUP BY
           pm.id, pm.name, pm.image, pm.composition, pm.description,
@@ -482,11 +336,12 @@ export class ProductMainService {
       LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
       LEFT JOIN products_original_test typ ON typ.id = ANY(pm.type) and typ.type = 'type'
       LEFT JOIN products_original_test ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
-      LEFT JOIN product_original_store_price ptype on typ.id_product = ptype.id_product and ptype.id_store = pm.id_store
-      LEFT JOIN product_original_store_price etype on ext.id_product = etype.id_product and etype.id_store = pm.id_store
-      LEFT JOIN products_main inf ON inf.id = pm.id
+      LEFT JOIN product_original_store_price ptype on typ.id_product = ptype.id_product and ptype.id_store = ANY(pm.id_store)
+      LEFT JOIN product_original_store_price etype on ext.id_product = etype.id_product and etype.id_store = ANY(pm.id_store)
+      LEFT JOIN products_main_test inf ON inf.id = pm.id
       LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
-      where pm.id_store = $1
+      where $1 = ANY(pm.id_store)
+      and ptype.price is not null
       GROUP BY
           pm.id, pm.name, pm.image, pm.composition, pm.description,
           pm.fats, pm.proteins, pm.carbohydrates, pm.calories,
@@ -537,7 +392,6 @@ export class ProductMainService {
                   DISTINCT JSONB_BUILD_OBJECT(
                       'id', ext.id_product,
                       'name', ext.name,
-                      'price', ext.price,
                       'image', ext.image,
                       'weight', ext.weight
                   )
@@ -557,7 +411,6 @@ export class ProductMainService {
                   DISTINCT JSONB_BUILD_OBJECT(
                       'id', typ.id_product,
                       'name', typ.name,
-                      'price', typ.price,
                       'weight', typ.weight
                   )
               ) FILTER (WHERE pm.id IS NOT NULL),
@@ -571,12 +424,13 @@ export class ProductMainService {
               'carbohydrates', pm.carbohydrates::numeric,
               'calories', pm.calories::numeric
           ) AS information
-      FROM products_main pm
+      FROM products_main_test pm
       LEFT JOIN groups po ON po.id = ANY(pm.groups)
       LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
       LEFT JOIN products_original typ ON typ.id = ANY(pm.type) and typ.type = 'type'
       LEFT JOIN products_original ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
-      LEFT JOIN products_main inf ON inf.id = pm.id
+      
+      LEFT JOIN products_main_test inf ON inf.id = pm.id
       LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
       WHERE pm.id = $1
       GROUP BY
@@ -668,12 +522,13 @@ export class ProductMainService {
       LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
       LEFT JOIN products_original typ ON typ.id = ANY(pm.type) and typ.type = 'type'
       LEFT JOIN products_original ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
-      LEFT JOIN product_original_store_price ptype on typ.id_product = ptype.id_product and ptype.id_store = pm.id_store
-      LEFT JOIN product_original_store_price etype on ext.id_product = etype.id_product and etype.id_store = pm.id_store
-      LEFT JOIN products_main inf ON inf.id = pm.id
+      LEFT JOIN product_original_store_price ptype on typ.id_product = ptype.id_product and ptype.id_store = ANY(pm.id_store)
+      LEFT JOIN product_original_store_price etype on ext.id_product = etype.id_product and etype.id_store = ANY(pm.id_store)
+      LEFT JOIN products_main_test inf ON inf.id = pm.id
       LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
       WHERE pm.id = $1
-      and pm.id_store = $2
+      and $2 = ANY(pm.id_store)
+      and ptype.price is not null 
       GROUP BY
           pm.id, pm.name, pm.image, pm.composition, pm.description,
           pm.fats, pm.proteins, pm.carbohydrates, pm.calories,
@@ -696,20 +551,7 @@ export class ProductMainService {
   async remove(id: number) {
     const result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
-      query: `DELETE FROM products_main WHERE id = ${id}`,
-    });
-    if (result.length === 0) {
-      throw new BadRequestException('Продукт не найден');
-    }
-    return {
-      message: `Продукт ${id} успешно удален`,
-    };
-  }
-
-  async removePerStore(id: number, idStore: number) {
-    const result = await this.databaseService.executeOperation({
-      operation: GRUD_OPERATION.QUERY,
-      query: `DELETE FROM products_main WHERE id = ${id} and id_store = ${idStore}`,
+      query: `DELETE FROM products_main_test WHERE id = ${id}`,
     });
     if (result.length === 0) {
       throw new BadRequestException('Продукт не найден');
@@ -727,13 +569,16 @@ export class ProductMainService {
 
     try {
       const currentImageUrl = existingProduct.image;
-
       const { image, ...updateData } = dto;
+      const dbUpdateData = {
+        ...updateData,
+        id_store: updateData.idStore,
+      };
 
       if (Object.keys(updateData).length > 0) {
         await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
-          table_name: 'products_main',
+          table_name: 'products_main_test',
           conflict: ['id'],
           columnUpdate: [
             'name',
@@ -750,8 +595,9 @@ export class ProductMainService {
             'carbohydrates',
             'calories',
             'color',
+            'id_store',
           ],
-          data: [{ id, ...updateData }],
+          data: [{ id, ...dbUpdateData }],
           transaction: transaction,
         });
       }
@@ -791,7 +637,7 @@ export class ProductMainService {
 
         await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
-          table_name: 'products_main',
+          table_name: 'products_main_test',
           conflict: ['id'],
           columnUpdate: ['image'],
           transaction: transaction,
@@ -887,7 +733,7 @@ export class ProductMainService {
 
         await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
-          table_name: 'products_main',
+          table_name: 'products_main_test',
           conflict: ['id'],
           columnUpdate: ['image'],
           transaction: transaction,

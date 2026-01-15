@@ -98,8 +98,6 @@ export class BannerMainService {
     }
   }
 
-
-
   async findAll() {
     try {
       const result = await this.databaseService.executeOperation({
@@ -121,7 +119,7 @@ export class BannerMainService {
     }
   }
 
-  async findAllPerStore(idStore:number) {
+  async findAllPerStore(idStore: number) {
     try {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
@@ -173,7 +171,7 @@ export class BannerMainService {
     }
   }
 
-  async findOnePerStore(idStore:number, id: number) {
+  async findOnePerStore(idStore: number, id: number) {
     try {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,

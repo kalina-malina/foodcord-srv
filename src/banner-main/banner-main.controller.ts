@@ -40,13 +40,13 @@ export class BannerMainController {
   }
 
   @Get('get-all-bunner-main')
-  @ApiOperation({ summary: 'Получение списка всех баннеров'  })
+  @ApiOperation({ summary: 'Получение списка всех баннеров' })
   async findAll() {
     return this.bannerMainService.findAll();
   }
-  
-  @Get("get-all-bunners-per-store/:idStore")
-  @ApiOperation({ summary: 'Получение списка всех баннеров магазина'})
+
+  @Get('get-all-bunners-per-store/:idStore')
+  @ApiOperation({ summary: 'Получение списка всех баннеров магазина' })
   async findAllPerStore(@Param('idStore') idStore: string) {
     return this.bannerMainService.findAllPerStore(+idStore);
   }
@@ -61,9 +61,7 @@ export class BannerMainController {
   }
   @Get('get-one-bunner/:id')
   @ApiOperation({ summary: 'Получение баннера по ID' })
-  async findOne(
-    @Param('id') id: string
-  ) {
+  async findOne(@Param('id') id: string) {
     return this.bannerMainService.findOne(+id);
   }
 

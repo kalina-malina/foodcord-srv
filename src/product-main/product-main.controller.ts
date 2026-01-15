@@ -13,7 +13,6 @@ import {
 import { ProductMainService } from './product-main.service';
 import {
   CreateProductMainAndStoreDto,
-  CreateProductMainDto,
 } from './dto/create-product-main.dto';
 
 import {
@@ -35,7 +34,7 @@ export class ProductMainController {
   constructor(private readonly productMainService: ProductMainService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Post()
+  @Post('create-product-main')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'image', maxCount: 1 }], multerImageOptions),
@@ -44,32 +43,13 @@ export class ProductMainController {
     summary: 'Создание продукта для отображения на устройстве',
   })
   async create(
-    @Body() createProductMainDto: CreateProductMainDto,
+    @Body() createProductMainDto: CreateProductMainAndStoreDto,
     @UploadedFiles() files: { image?: Express.Multer.File[] },
   ) {
     if (files?.image?.[0]) {
       createProductMainDto.image = files.image[0];
     }
     return this.productMainService.create(createProductMainDto);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('create-product-main-per-store')
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(
-    FileFieldsInterceptor([{ name: 'image', maxCount: 1 }], multerImageOptions),
-  )
-  @ApiOperation({
-    summary: 'Создание продукта для отображения на устройстве',
-  })
-  async createPerStore(
-    @Body() createProductMainAndStoreDto: CreateProductMainAndStoreDto,
-    @UploadedFiles() files: { image?: Express.Multer.File[] },
-  ) {
-    if (files?.image?.[0]) {
-      createProductMainAndStoreDto.image = files.image[0];
-    }
-    return this.productMainService.createPerStore(createProductMainAndStoreDto);
   }
 
   @Get()
@@ -128,15 +108,6 @@ export class ProductMainController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete('delete-product-main-per-store/:idStore/:id')
-  @ApiOperation({
-    summary: 'Удаление продукта ',
-  })
-  removePerStore(@Param('id') id: string, @Param('idStore') idStore: string) {
-    return this.productMainService.removePerStore(+id, +idStore);
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
@@ -155,32 +126,5 @@ export class ProductMainController {
       updateProductMainDto.image = files.image[0];
     }
     return this.productMainService.update(id, updateProductMainDto);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Patch('update-main-product-per-store/:idStore/:id')
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(
-    FileFieldsInterceptor([{ name: 'image', maxCount: 1 }], multerImageOptions),
-  )
-  @ApiBody({ type: UpdateProductMainDto })
-  @ApiOperation({
-    summary: 'Обновление продукта',
-  })
-  updatePerStore(
-    @Param('id') id: number,
-    @Param('idStore') idStore: string,
-    @Body() updateProductMainDto: UpdateProductMainDto,
-    @UploadedFiles() files: { image?: Express.Multer.File[] },
-  ) {
-    const storeIdNum = +idStore;
-    if (files?.image?.[0]) {
-      updateProductMainDto.image = files.image[0];
-    }
-    return this.productMainService.updateProductPerStore(
-      id,
-      storeIdNum,
-      updateProductMainDto,
-    );
   }
 }

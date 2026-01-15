@@ -121,12 +121,14 @@ export class CreateProductMainDto {
   color: string;
 }
 export class CreateProductMainAndStoreDto extends CreateProductMainDto {
-  @ApiProperty({ description: 'Номер магазина', example: 42014 })
-  @Transform(({ value }) => {
-    return parseFloat(value);
+  @ApiProperty({
+    description: 'Номер магазина',
+    example: [42014, 42012, 3],
   })
-  @IsNumber()
-  idStore: number;
+  @Transform(({ value }) => transformNumberArray(value))
+  @IsArray()
+  @IsNumber({}, { each: true })
+  idStore: number[];
 }
 export class CreateProductTypeDto {
   @ApiProperty({ description: 'Название типа', example: '25 см' })

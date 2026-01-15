@@ -116,12 +116,11 @@ export class BannerTvService {
       };
     }
   }
-  async findAllBunnerPerStore(idStore:number) {
+  async findAllBunnerPerStore(idStore: number) {
     try {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query:
-          `SELECT id::int, name, url, type, seconds, store, is_active as "isActive", tv_number as "tvNumber", "create_at" as "createAt", "updated_at" as "updatedAt" 
+        query: `SELECT id::int, name, url, type, seconds, store, is_active as "isActive", tv_number as "tvNumber", "create_at" as "createAt", "updated_at" as "updatedAt" 
           FROM banner_tv_test 
           where $1 = any(store)
           ORDER BY id DESC`,
