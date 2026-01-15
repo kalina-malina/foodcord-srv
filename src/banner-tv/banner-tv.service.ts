@@ -30,7 +30,7 @@ export class BannerTvService {
 
     result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
-      query: 'SELECT name FROM banner_tv WHERE LOWER(name) = LOWER($1)',
+      query: 'SELECT name FROM banner_tv_test WHERE LOWER(name) = LOWER($1)',
       params: [NameBanner],
     });
     if (result && result.rows.length > 0) {
@@ -46,7 +46,7 @@ export class BannerTvService {
     try {
       result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.INSERT,
-        table_name: 'banner_tv',
+        table_name: 'banner_tv_test',
         conflict: ['name'],
         data: [{ ...bannerData, name: NameBanner }],
         transaction: transaction,
@@ -67,7 +67,7 @@ export class BannerTvService {
 
           result = await this.databaseService.executeOperation({
             operation: GRUD_OPERATION.UPDATE,
-            table_name: 'banner_tv',
+            table_name: 'banner_tv_test',
             conflict: ['id'],
             columnUpdate: ['url', 'type'],
             data: [
@@ -102,8 +102,30 @@ export class BannerTvService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, name, url, type, seconds, store, is_active as "isActive", tv_number as "tvNumber", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_tv ORDER BY id DESC',
+          'SELECT id::int, name, url, type, seconds, store, is_active as "isActive", tv_number as "tvNumber", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_tv_test ORDER BY id DESC',
         params: [],
+      });
+      return {
+        success: true,
+        data: result.rows,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: `Ошибка при получении списка баннеров TV: ${error.message}`,
+      };
+    }
+  }
+  async findAllBunnerPerStore(idStore:number) {
+    try {
+      const result = await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query:
+          `SELECT id::int, name, url, type, seconds, store, is_active as "isActive", tv_number as "tvNumber", "create_at" as "createAt", "updated_at" as "updatedAt" 
+          FROM banner_tv_test 
+          where $1 = any(store)
+          ORDER BY id DESC`,
+        params: [idStore],
       });
       return {
         success: true,
@@ -122,7 +144,7 @@ export class BannerTvService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, name, url, type, seconds, store, is_active as "isActive", tv_number as "tvNumber", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_tv WHERE id = $1',
+          'SELECT id::int, name, url, type, seconds, store, is_active as "isActive", tv_number as "tvNumber", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_tv_test WHERE id = $1',
         params: [id],
       });
       return {
@@ -155,7 +177,7 @@ export class BannerTvService {
         result = await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.QUERY,
           query:
-            'SELECT name FROM banner_tv WHERE LOWER(name) = LOWER($1) AND id != $2',
+            'SELECT name FROM banner_tv_test WHERE LOWER(name) = LOWER($1) AND id != $2',
           params: [NameBanner, id],
           transaction: transaction,
         });
@@ -174,7 +196,7 @@ export class BannerTvService {
       if (Object.keys(updateData).length > 0) {
         result = await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
-          table_name: 'banner_tv',
+          table_name: 'banner_tv_test',
           conflict: ['id'],
           columnUpdate: ['name', 'seconds', 'is_active', 'store', 'tv_number'],
           data: [{ id, ...updateData }],
@@ -195,7 +217,7 @@ export class BannerTvService {
 
         result = await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
-          table_name: 'banner_tv',
+          table_name: 'banner_tv_test',
           conflict: ['id'],
           columnUpdate: ['url', 'type'],
           data: [
@@ -232,7 +254,7 @@ export class BannerTvService {
 
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.DELETE,
-        table_name: 'banner_tv',
+        table_name: 'banner_tv_test',
         conflict: ['id'],
         data: [{ id }],
       });

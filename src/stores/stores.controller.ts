@@ -1,12 +1,7 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { StoresService } from './stores.service';
 import { JwtAuthGuard } from '@/auth/guards/auth.guard';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
-
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SearchStoreDto } from './dto/create-store.dto';
 
 @Controller('stores')

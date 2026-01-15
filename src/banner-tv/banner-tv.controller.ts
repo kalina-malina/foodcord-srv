@@ -36,13 +36,19 @@ export class BannerTvController {
     return this.bannerTvService.create(createBannerTvDto);
   }
 
-  @Get()
+  @Get('get-all-bunner-tv')
   @ApiOperation({ summary: 'Получение списка всех баннеров TV' })
   findAll() {
     return this.bannerTvService.findAll();
   }
 
-  @Get(':id')
+  @Get('get-all-store-bunner-tv/:idStore')
+  @ApiOperation({ summary: 'Получение списка всех баннеров TV магазинов' })
+  findAllStoreBunner(@Param('idStore') idStore: string) {
+    return this.bannerTvService.findAllBunnerPerStore(+idStore);
+  }
+
+  @Get('get-one-bunner-tv/:id')
   @ApiOperation({ summary: 'Получение баннера TV по ID' })
   findOne(@Param('id') id: number) {
     return this.bannerTvService.findOne(id);

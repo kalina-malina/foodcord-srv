@@ -30,7 +30,7 @@ export class BannerMainService {
 
     result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
-      query: 'SELECT name FROM banner_main WHERE LOWER(name) = LOWER($1)',
+      query: 'SELECT name FROM banner_main_test WHERE LOWER(name) = LOWER($1)',
       params: [NameBanner],
     });
     if (result && result.rows.length > 0) {
@@ -46,7 +46,7 @@ export class BannerMainService {
     try {
       result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.INSERT,
-        table_name: 'banner_main',
+        table_name: 'banner_main_test',
         conflict: ['name'],
         data: [{ ...bannerData, name: NameBanner }],
         transaction: transaction,
@@ -68,7 +68,7 @@ export class BannerMainService {
 
           result = await this.databaseService.executeOperation({
             operation: GRUD_OPERATION.UPDATE,
-            table_name: 'banner_main',
+            table_name: 'banner_main_test',
             conflict: ['id'],
             columnUpdate: ['url', 'type'],
             data: [
@@ -98,14 +98,40 @@ export class BannerMainService {
     }
   }
 
+
+
   async findAll() {
     try {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query: `SELECT
            id:: int, seconds:: int, url, type, name, type, store, is_active as
-           "isActive", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_main ORDER BY id DESC`,
+           "isActive", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_main_test ORDER BY id DESC`,
         params: [],
+      });
+      return {
+        success: true,
+        data: result.rows,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: `Ошибка при получении списка баннеров: ${error.message}`,
+      };
+    }
+  }
+
+  async findAllPerStore(idStore:number) {
+    try {
+      const result = await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query: `SELECT
+           id:: int, seconds:: int, url, type, name, type, store, is_active as
+           "isActive", "create_at" as "createAt", "updated_at" as "updatedAt" 
+           FROM banner_main_test 
+           where $1 = ANY(store)
+           ORDER BY id DESC`,
+        params: [idStore],
       });
       return {
         success: true,
@@ -124,8 +150,38 @@ export class BannerMainService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query: `SELECT id:: int, seconds:: int, url, type, name, type, store, is_active as
-           "isActive", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_main WHERE id = $1`,
+           "isActive", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_main_test WHERE id = $1`,
         params: [id],
+      });
+
+      if (result.rows.length === 0) {
+        return {
+          success: false,
+          message: 'Баннер не найден',
+        };
+      }
+
+      return {
+        success: true,
+        data: result.rows[0],
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: `Ошибка при получении баннера: ${error.message}`,
+      };
+    }
+  }
+
+  async findOnePerStore(idStore:number, id: number) {
+    try {
+      const result = await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query: `SELECT id:: int, seconds:: int, url, type, name, type, store, is_active as
+           "isActive", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_main_test 
+           WHERE id = $1
+           and $2 = ANY(store)`,
+        params: [id, idStore],
       });
 
       if (result.rows.length === 0) {
@@ -165,7 +221,7 @@ export class BannerMainService {
         result = await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.QUERY,
           query:
-            'SELECT name FROM banner_main WHERE LOWER(name) = LOWER($1) AND id != $2',
+            'SELECT name FROM banner_main_test WHERE LOWER(name) = LOWER($1) AND id != $2',
           params: [NameBanner, id],
           transaction: transaction,
         });
@@ -184,7 +240,7 @@ export class BannerMainService {
       if (Object.keys(updateData).length > 0) {
         result = await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
-          table_name: 'banner_main',
+          table_name: 'banner_main_test',
           conflict: ['id'],
           columnUpdate: ['name', 'seconds', 'is_active', 'store'],
           data: [{ id, ...updateData }],
@@ -205,7 +261,7 @@ export class BannerMainService {
 
         result = await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
-          table_name: 'banner_main',
+          table_name: 'banner_main_test',
           conflict: ['id'],
           columnUpdate: ['url', 'type'],
           data: [
@@ -242,7 +298,7 @@ export class BannerMainService {
 
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.DELETE,
-        table_name: 'banner_main',
+        table_name: 'banner_main_test',
         conflict: ['id'],
         data: [{ id }],
       });
