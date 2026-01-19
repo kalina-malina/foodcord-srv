@@ -14,7 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { multerImageOptions } from '@/s3/multer.config';
 import { ProductTypeService } from './product-type.service';
 import { JwtAuthGuard } from '@/auth/guards/auth.guard';
-import { UpdateProductTypeDto } from './dto/update-product-type.dto';
+import { UpdatePriceProductPerStoreDto, UpdateProductTypeDto } from './dto/update-product-type.dto';
 
 @Controller('product-type')
 @ApiTags('Типы продуктов')
@@ -27,10 +27,18 @@ export class ProductTypeController {
     return await this.productTypeService.findAll();
   }
 
+
+
   @Get(':id')
   @ApiOperation({ summary: 'Получить тип продукта по id' })
   async findOne(@Param('id') id: string) {
     return await this.productTypeService.findOne(+id);
+  }
+
+  @Get('get-type-product-per-store/:idStore/:id')
+  @ApiOperation({ summary: 'Получить тип продукта по id' })
+  async findOnePerStore(@Param('id') id: string, @Param('idStore') idStore: string) {
+    return await this.productTypeService.findOnePerStore(+idStore, +id);
   }
 
   @Patch(':id')
@@ -52,5 +60,15 @@ export class ProductTypeController {
   @ApiOperation({ summary: 'Удалить тип продукта' })
   async delete(@Param('id') id: number) {
     return await this.productTypeService.delete(id);
+  }
+
+  @Patch('update-price/:idStore/:id')
+  @ApiOperation({ summary: 'Обновить цену продукта по id и idStore' })
+  @UseInterceptors(FileInterceptor('image', multerImageOptions))
+  async updatePrice(
+    @Param('id') id: string,
+    @Body() updatePriceProductPerStoreDto: UpdatePriceProductPerStoreDto,
+  ) {
+    return await this.productTypeService.updatePrice(+id, updatePriceProductPerStoreDto);
   }
 }

@@ -27,7 +27,7 @@ export class ProductExtrasService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, name_original as name, description, weight::int, price::int, type, image FROM products_original WHERE type = $1',
+          'SELECT id::int, name_original as name, description, weight::int,  type, image FROM products_original_test WHERE type = $1',
         params: [TYPE_PRODUCT_ENUM.EXTRAS],
       });
       if (result.rows.length === 0) {
@@ -49,7 +49,7 @@ export class ProductExtrasService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, name_original as name, description, weight::int, price::int, type, image FROM products_original WHERE type = $1 AND id = $2',
+          'SELECT id::int, name_original as name, description, weight::int,  type, image FROM products_original_test WHERE type = $1 AND id = $2',
         params: [TYPE_PRODUCT_ENUM.EXTRAS, id],
       });
       if (result.rows.length === 0) {
@@ -73,7 +73,7 @@ export class ProductExtrasService {
       const existingProduct = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id, name_original, description, image, price, weight FROM products_original WHERE type = $1 AND id = $2',
+          'SELECT id, name_original, description, image, weight FROM products_original_test WHERE type = $1 AND id = $2',
         params: [TYPE_PRODUCT_ENUM.EXTRAS, id],
         transaction: transaction,
       });
@@ -82,7 +82,7 @@ export class ProductExtrasService {
         throw new NotFoundException('Дополнительный продукт не найден');
       }
 
-      const { name, description, price, weight, image, type } =
+      const { name, description, weight, image, type } =
         updateProductExtrasDto;
 
       const updateData: any = { id };
@@ -98,11 +98,6 @@ export class ProductExtrasService {
         columnUpdate.push('description');
       }
 
-      if (price !== undefined) {
-        updateData.price = price;
-        columnUpdate.push('price');
-      }
-
       if (weight !== undefined) {
         updateData.weight = weight;
         columnUpdate.push('weight');
@@ -116,7 +111,7 @@ export class ProductExtrasService {
       if (columnUpdate.length > 0) {
         await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
-          table_name: 'products_original',
+          table_name: 'products_original_test',
           conflict: ['id'],
           columnUpdate: columnUpdate,
           data: [updateData],
@@ -134,7 +129,7 @@ export class ProductExtrasService {
         if (urlImage) {
           await this.databaseService.executeOperation({
             operation: GRUD_OPERATION.UPDATE,
-            table_name: 'products_original',
+            table_name: 'products_original_test',
             conflict: ['id'],
             columnUpdate: ['image'],
             data: [{ id, image: urlImage }],
@@ -167,7 +162,7 @@ export class ProductExtrasService {
       const existingProduct = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id, id_product, image FROM products_original WHERE type = $1 AND id = $2',
+          'SELECT id, id_product, image FROM products_original_test WHERE type = $1 AND id = $2',
         params: [TYPE_PRODUCT_ENUM.EXTRAS, id],
       });
 
@@ -193,13 +188,12 @@ export class ProductExtrasService {
 
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.UPDATE,
-        table_name: 'products_original',
+        table_name: 'products_original_test',
         conflict: ['id'],
         columnUpdate: [
           'name',
           'description',
           'image',
-          'price',
           'type',
           'weight',
         ],
@@ -209,7 +203,6 @@ export class ProductExtrasService {
             name: null,
             description: null,
             image: null,
-            price: 0,
             type: null,
             weight: null,
           },

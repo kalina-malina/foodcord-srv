@@ -3,9 +3,7 @@ import {
   ConflictException,
   Injectable,
 } from '@nestjs/common';
-import {
-  CreateProductMainAndStoreDto,
-} from './dto/create-product-main.dto';
+import { CreateProductMainAndStoreDto } from './dto/create-product-main.dto';
 import { DatabaseService } from '@/pg-connect/foodcord/orm/grud-postgres.service';
 import { GRUD_OPERATION } from '@/pg-connect/foodcord/orm/enum/metod.enum';
 import { S3StorageService } from '@/s3/storage.service';

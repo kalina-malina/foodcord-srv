@@ -11,7 +11,7 @@ import { S3StorageService } from '@/s3/storage.service';
 import { UploadPhotoService } from '@/s3/upload-photo';
 import { ConfigService } from '@nestjs/config';
 import { S3_PATCH_ENUM } from '@/s3/enum/s3.pach.enum';
-import { UpdateProductTypeDto } from './dto/update-product-type.dto';
+import { UpdatePriceProductPerStoreDto, UpdateProductTypeDto } from './dto/update-product-type.dto';
 import { PoolClient } from 'pg';
 
 @Injectable()
@@ -27,7 +27,7 @@ export class ProductTypeService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int,  name_original as name, description, weight::int, price::int, type, image FROM products_original_test WHERE type = $1',
+          'SELECT id::int,  name_original as name, description, weight::int, type, image FROM products_original_test WHERE type = $1',
         params: [TYPE_PRODUCT_ENUM.TYPE],
       });
       if (result.rows.length === 0) {
@@ -49,8 +49,32 @@ export class ProductTypeService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, name_original as name, description, weight::int, price::int, type, image FROM products_original_test WHERE type = $1 AND id = $2',
+          'SELECT id::int, name_original as name, description, weight::int,  type, image FROM products_original_test WHERE type = $1 AND id = $2',
         params: [TYPE_PRODUCT_ENUM.TYPE, id],
+      });
+      if (result.rows.length === 0) {
+        throw new NotFoundException('Тип продукта не найден');
+      }
+      return {
+        success: true,
+        data: result.rows[0],
+      };
+    } catch (error: any) {
+      throw new BadGatewayException(
+        `Ошибка при получении типа продукта: ${error.message}`,
+      );
+    }
+  }
+  async findOnePerStore(idStore:number, id: number) {
+    try {
+      const result = await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query:
+          `SELECT id::int, name_original as name, description, weight::int,  type, image, price 
+          FROM products_original_test pot
+          LEFT JOIN product_original_store_price posp ON posp.id_product = pot.id_product
+          WHERE type = $1 AND id = $2 AND id_store = $3`,
+        params: [TYPE_PRODUCT_ENUM.TYPE, id, idStore],
       });
       if (result.rows.length === 0) {
         throw new NotFoundException('Тип продукта не найден');
@@ -73,7 +97,7 @@ export class ProductTypeService {
       const existingProduct = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id, name_original, description, image, price, weight FROM products_original_test WHERE type = $1 AND id = $2',
+          'SELECT id, name_original, description, image, weight FROM products_original_test WHERE type = $1 AND id = $2',
         params: [TYPE_PRODUCT_ENUM.TYPE, id],
         transaction: transaction,
       });
@@ -82,7 +106,7 @@ export class ProductTypeService {
         throw new NotFoundException('Тип продукта не найден');
       }
 
-      const { name, description, price, weight, image, type } =
+      const { name, description, weight, image, type } =
         updateProductTypeDto;
 
       const updateData: any = { id };
@@ -98,10 +122,7 @@ export class ProductTypeService {
         columnUpdate.push('description');
       }
 
-      if (price !== undefined) {
-        updateData.price = price;
-        columnUpdate.push('price');
-      }
+
 
       if (weight !== undefined) {
         updateData.weight = weight;
@@ -162,6 +183,58 @@ export class ProductTypeService {
     }
   }
 
+  async updatePrice(id: number, updatePriceProductPerStoreDto: UpdatePriceProductPerStoreDto) {
+    const transaction: PoolClient =
+      await this.databaseService.beginTransaction();
+    try {
+      const existingProduct = await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query:
+          'SELECT id, name_original, description, image, weight, id_product FROM products_original_test WHERE type = $1 AND id = $2',
+        params: [TYPE_PRODUCT_ENUM.TYPE, id],
+        transaction: transaction,
+      }) as {rows:{id:number, name_original:string, description:string, image:string, weight:number, id_product:number }[]};
+
+      if (existingProduct.rows.length === 0) {
+        throw new NotFoundException('Тип продукта не найден');
+      }
+
+      const { idStore, price } =
+      updatePriceProductPerStoreDto;
+
+
+     
+        await this.databaseService.executeOperation({
+          operation: GRUD_OPERATION.INSERT_ON_UPDAETE,
+          table_name: 'product_original_store_price',
+          conflict: ['id_store', 'id_product'],
+          columnUpdate: ['price'],
+          data: [{id_store:idStore, id_product: existingProduct.rows[0]?.id_product, price:price}],
+          transaction: transaction,
+        });
+      
+
+
+
+      await this.databaseService.commitTransaction(transaction);
+
+      return {
+        success: true,
+        message: `Цена типа продукта ${id} успешно обновлена`,
+      };
+    } catch (error: any) {
+      await this.databaseService.rollbackTransaction(transaction);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadGatewayException(
+        `Ошибка при обновлении типа продукта: ${error.message}`,
+      );
+    } finally {
+      await this.databaseService.releaseClient(transaction);
+    }
+  }
+
   async delete(id: number) {
     try {
       const existingProduct = await this.databaseService.executeOperation({
@@ -199,7 +272,6 @@ export class ProductTypeService {
           'name',
           'description',
           'image',
-          'price',
           'type',
           'weight',
         ],
@@ -209,7 +281,6 @@ export class ProductTypeService {
             name: null,
             description: null,
             image: null,
-            price: 0,
             type: null,
             weight: null,
           },

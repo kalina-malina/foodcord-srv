@@ -11,9 +11,7 @@ import {
   Patch,
 } from '@nestjs/common';
 import { ProductMainService } from './product-main.service';
-import {
-  CreateProductMainAndStoreDto,
-} from './dto/create-product-main.dto';
+import { CreateProductMainAndStoreDto } from './dto/create-product-main.dto';
 
 import {
   ApiConsumes,

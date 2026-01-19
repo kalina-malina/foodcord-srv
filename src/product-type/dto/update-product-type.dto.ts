@@ -13,10 +13,6 @@ export class UpdateProductTypeDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ description: 'Цена', required: false })
-  @IsOptional()
-  @IsNumber()
-  price?: number;
 
   @ApiProperty({ description: 'Вес', required: false })
   @IsOptional()
@@ -36,4 +32,16 @@ export class UpdateProductTypeDto {
   @IsOptional()
   @IsEnum(TYPE_PRODUCT_ENUM)
   type?: TYPE_PRODUCT_ENUM;
+}
+
+
+export class UpdatePriceProductPerStoreDto{
+  @ApiProperty({ description: 'Магазин', required: false })
+  @IsNumber()
+  idStore: number;
+
+
+  @ApiProperty({ description: 'Цена', required: false })
+  @IsNumber()
+  price: number;
 }

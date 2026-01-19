@@ -28,13 +28,7 @@ export class UpdateProductExtrasDto {
   @IsOptional()
   image?: Express.Multer.File;
 
-  @ApiProperty({
-    description: 'Цена дополнительного продукта',
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  price?: number;
+
 
   @ApiProperty({
     description: 'Вес дополнительного продукта',
