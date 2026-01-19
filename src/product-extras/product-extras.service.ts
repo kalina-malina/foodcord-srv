@@ -82,8 +82,7 @@ export class ProductExtrasService {
         throw new NotFoundException('Дополнительный продукт не найден');
       }
 
-      const { name, description, weight, image, type } =
-        updateProductExtrasDto;
+      const { name, description, weight, image, type } = updateProductExtrasDto;
 
       const updateData: any = { id };
       const columnUpdate: string[] = [];
@@ -190,13 +189,7 @@ export class ProductExtrasService {
         operation: GRUD_OPERATION.UPDATE,
         table_name: 'products_original_test',
         conflict: ['id'],
-        columnUpdate: [
-          'name',
-          'description',
-          'image',
-          'type',
-          'weight',
-        ],
+        columnUpdate: ['name', 'description', 'image', 'type', 'weight'],
         data: [
           {
             id: id,

@@ -3,7 +3,10 @@ import {
   ConflictException,
   Injectable,
 } from '@nestjs/common';
-import { CreateProductMainAndStoreDto } from './dto/create-product-main.dto';
+import {
+  CopyProductFromStore,
+  CreateProductMainAndStoreDto,
+} from './dto/create-product-main.dto';
 import { DatabaseService } from '@/pg-connect/foodcord/orm/grud-postgres.service';
 import { GRUD_OPERATION } from '@/pg-connect/foodcord/orm/enum/metod.enum';
 import { S3StorageService } from '@/s3/storage.service';
@@ -742,6 +745,63 @@ export class ProductMainService {
       await this.databaseService.commitTransaction(transaction);
       return {
         message: `Продукт ${id} успешно обновлен`,
+      };
+    } catch (error: any) {
+      await this.databaseService.rollbackTransaction(transaction);
+      throw new BadRequestException(error.message);
+    } finally {
+      await this.databaseService.releaseClient(transaction);
+    }
+  }
+
+  async copyProductFromStore(copyProductFromStore: CopyProductFromStore) {
+    const transaction: PoolClient =
+      await this.databaseService.beginTransaction();
+
+    try {
+      // Защита от пустого массива
+      if (copyProductFromStore.id.length === 0) {
+        throw new BadRequestException('Массив id не должен быть пустым');
+      }
+
+      // Генерируем placeholders: $1, $2, $3, ...
+      const placeholders = copyProductFromStore.id
+        .map((_, i) => `$${i + 1}`)
+        .join(', ');
+
+      const result = (await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query: `SELECT id::int, id_store::int[] as "idStore" FROM products_main_test WHERE id IN (${placeholders})`,
+        params: copyProductFromStore.id,
+      })) as { rows: { id: number; idStore: number[] }[] };
+      const itogResult = result.rows.filter(
+        (row) => !row.idStore.includes(copyProductFromStore.idStore),
+      );
+      const addResult = itogResult.map(
+        (row) =>
+          (row = {
+            id: row.id,
+            idStore: [...row.idStore, copyProductFromStore.idStore],
+          }),
+      );
+      for (const row of addResult) {
+        await this.databaseService.executeOperation({
+          operation: GRUD_OPERATION.UPDATE,
+          table_name: 'products_main_test',
+          conflict: ['id'],
+          columnUpdate: ['id_store'],
+          data: [
+            {
+              id: row.id,
+              id_store: row.idStore,
+            },
+          ],
+          transaction: transaction,
+        });
+      }
+      await this.databaseService.commitTransaction(transaction);
+      return {
+        message: `Успешно добавлен магазин ${copyProductFromStore.idStore} в продукты ${itogResult.map((row) => row.id)}`,
       };
     } catch (error: any) {
       await this.databaseService.rollbackTransaction(transaction);

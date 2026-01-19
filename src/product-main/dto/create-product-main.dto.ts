@@ -257,3 +257,22 @@ export class CreateProductMainDtoDD {
   @Type(() => CreateProductInformationDto)
   information: CreateProductInformationDto;
 }
+
+export class CopyProductFromStore {
+  @ApiProperty({ description: 'Номер основного продукта', example: [1, 2, 3] })
+  @Transform(({ value }) => transformNumberArray(value))
+  @IsArray()
+  @IsNumber({}, { each: true })
+  id: number[];
+
+  @ApiProperty({
+    description: 'Номер магазина, куда копировать продукты',
+    example: 42002,
+  })
+  @Transform(({ value }) => {
+    const num = parseFloat(value);
+    return isNaN(num) ? 0 : num;
+  })
+  @IsNumber()
+  idStore: number;
+}

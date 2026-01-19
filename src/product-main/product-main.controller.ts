@@ -11,7 +11,10 @@ import {
   Patch,
 } from '@nestjs/common';
 import { ProductMainService } from './product-main.service';
-import { CreateProductMainAndStoreDto } from './dto/create-product-main.dto';
+import {
+  CopyProductFromStore,
+  CreateProductMainAndStoreDto,
+} from './dto/create-product-main.dto';
 
 import {
   ApiConsumes,
@@ -48,6 +51,15 @@ export class ProductMainController {
       createProductMainDto.image = files.image[0];
     }
     return this.productMainService.create(createProductMainDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBody({ type: CopyProductFromStore })
+  @Post('copy-product-main-from-store')
+  async copyProductFromStore(
+    @Body() copyProductFromStore: CopyProductFromStore,
+  ) {
+    return this.productMainService.copyProductFromStore(copyProductFromStore);
   }
 
   @Get()

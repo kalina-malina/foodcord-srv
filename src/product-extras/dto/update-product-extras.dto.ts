@@ -28,8 +28,6 @@ export class UpdateProductExtrasDto {
   @IsOptional()
   image?: Express.Multer.File;
 
-
-
   @ApiProperty({
     description: 'Вес дополнительного продукта',
     required: false,
