@@ -1,4 +1,12 @@
-import { IsString, IsNumber, IsOptional, IsEnum, IsArray, ValidateNested, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsEnum,
+  IsArray,
+  ValidateNested,
+  IsNotEmpty,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { TYPE_PRODUCT_ENUM } from '@/product-original/enum/type-prodict.enum';
 import { Type } from 'class-transformer';

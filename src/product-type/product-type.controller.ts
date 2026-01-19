@@ -80,7 +80,8 @@ export class ProductTypeController {
   @Patch('update-price-list')
   @ApiOperation({ summary: 'Обновить список цен и продуктов' })
   async updatePriceList(
-    @Body() updatePriceProductPerStoreListDto: UpdatePriceProductPerStoreListDto,
+    @Body()
+    updatePriceProductPerStoreListDto: UpdatePriceProductPerStoreListDto,
   ) {
     return await this.productTypeService.updatePriceList(
       updatePriceProductPerStoreListDto,

@@ -183,9 +183,7 @@ export class ProductTypeService {
     }
   }
 
-  async updatePrice(
-    body: UpdatePriceProductPerStoreDto,
-  ) {
+  async updatePrice(body: UpdatePriceProductPerStoreDto) {
     const transaction: PoolClient =
       await this.databaseService.beginTransaction();
     try {
@@ -246,78 +244,80 @@ export class ProductTypeService {
     }
   }
 
-  async updatePriceList(body: UpdatePriceProductPerStoreListDto){
+  async updatePriceList(body: UpdatePriceProductPerStoreListDto) {
     const transaction: PoolClient =
-    await this.databaseService.beginTransaction();
-  try {
-    // 1. Проверяем наличие списка продуктов
-    if (!body.list || !Array.isArray(body.list)) {
-      throw new BadRequestException('Список продуктов отсутствует или имеет неверный формат');
-    }
+      await this.databaseService.beginTransaction();
+    try {
+      // 1. Проверяем наличие списка продуктов
+      if (!body.list || !Array.isArray(body.list)) {
+        throw new BadRequestException(
+          'Список продуктов отсутствует или имеет неверный формат',
+        );
+      }
 
-    // 2. Извлекаем ID продуктов
-const productIds = body.list.map(item => item.id);
+      // 2. Извлекаем ID продуктов
+      const productIds = body.list.map((item) => item.id);
 
-if (productIds.length === 0) {
-  throw new BadRequestException('Список продуктов пуст');
-}
+      if (productIds.length === 0) {
+        throw new BadRequestException('Список продуктов пуст');
+      }
 
-// 2. Формируем плейсхолдеры для IN: $2, $3, $4, ...
-const idPlaceholders = productIds.map((_, i) => `$${i + 2}`).join(', ');
+      // 2. Формируем плейсхолдеры для IN: $2, $3, $4, ...
+      const idPlaceholders = productIds.map((_, i) => `$${i + 2}`).join(', ');
 
-// 3. Собираем все параметры: сначала type, потом все ID
-const params = [TYPE_PRODUCT_ENUM.TYPE, ...productIds];
+      // 3. Собираем все параметры: сначала type, потом все ID
+      const params = [TYPE_PRODUCT_ENUM.TYPE, ...productIds];
 
-const existingProduct = await this.databaseService.executeOperation({
-  operation: GRUD_OPERATION.QUERY,
-  query: `SELECT id::int, id_product::int as "idProduct" FROM products_original_test WHERE type = $1 AND id IN (${idPlaceholders})`,
-  params: params,
-  transaction: transaction,
-}) as {rows: {id:number, idProduct: number}[]};
+      const existingProduct = (await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query: `SELECT id::int, id_product::int as "idProduct" FROM products_original_test WHERE type = $1 AND id IN (${idPlaceholders})`,
+        params: params,
+        transaction: transaction,
+      })) as { rows: { id: number; idProduct: number }[] };
 
-// 4. Создаём Map для быстрого поиска idProduct по id
-const idProductMap = new Map<number, number>();
-existingProduct.rows.forEach(row => {
-  idProductMap.set(row.id, row.idProduct);
-});
+      // 4. Создаём Map для быстрого поиска idProduct по id
+      const idProductMap = new Map<number, number>();
+      existingProduct.rows.forEach((row) => {
+        idProductMap.set(row.id, row.idProduct);
+      });
 
-// 5. Присоединяем idProduct к каждому элементу body.list
-const listPrice = body.list.map(item => ({
-  ...item,
-  idProduct: idProductMap.get(item.id) ?? null,
-}));
-for (const row of listPrice){
-  await this.databaseService.executeOperation({
-    operation: GRUD_OPERATION.INSERT_ON_UPDAETE,
-    table_name: 'product_original_store_price',
-    conflict: ['id_product', 'id_store'],
-    columnUpdate: ['price'],
-    data: [
-      {
-        id_product: row.idProduct,
-        id_store: row.idStore,
-        price: row.price
-      },
-    ],
-    transaction: transaction,
-  });
-}
+      // 5. Присоединяем idProduct к каждому элементу body.list
+      const listPrice = body.list.map((item) => ({
+        ...item,
+        idProduct: idProductMap.get(item.id) ?? null,
+      }));
+      for (const row of listPrice) {
+        await this.databaseService.executeOperation({
+          operation: GRUD_OPERATION.INSERT_ON_UPDAETE,
+          table_name: 'product_original_store_price',
+          conflict: ['id_product', 'id_store'],
+          columnUpdate: ['price'],
+          data: [
+            {
+              id_product: row.idProduct,
+              id_store: row.idStore,
+              price: row.price,
+            },
+          ],
+          transaction: transaction,
+        });
+      }
 
-  await this.databaseService.commitTransaction(transaction);
+      await this.databaseService.commitTransaction(transaction);
       return {
         message: `Успешно изменена цена у продуктов`,
       };
-  } catch (error: any) {
-    await this.databaseService.rollbackTransaction(transaction);
-    if (error instanceof NotFoundException) {
-      throw error;
+    } catch (error: any) {
+      await this.databaseService.rollbackTransaction(transaction);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadGatewayException(
+        `Ошибка при обновлении типов продуктов: ${error.message}`,
+      );
+    } finally {
+      await this.databaseService.releaseClient(transaction);
     }
-    throw new BadGatewayException(
-      `Ошибка при обновлении типов продуктов: ${error.message}`,
-    );
-  } finally {
-    await this.databaseService.releaseClient(transaction);
-  }
   }
 
   async delete(id: number) {

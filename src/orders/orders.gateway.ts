@@ -55,19 +55,6 @@ export class OrdersGateway implements OnGatewayConnection, OnGatewayDisconnect {
       timestamp: new Date().toISOString(),
     });
 
-    // Автоматически отправляем список заказов новому клиенту
-    try {
-      const orders = await this.ordersService.findAll();
-      client.emit('orders_list', orders);
-      this.logger.log(
-        `📋 отправлен список заказов клиенту ${client.id}: ${orders.length} шт.`,
-      );
-    } catch (error) {
-      this.logger.error(
-        '❌ ошибка при отправке заказов новому клиенту:',
-        error,
-      );
-    }
   }
 
   handleDisconnect(client: Socket) {
