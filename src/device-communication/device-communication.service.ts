@@ -153,7 +153,36 @@ export class DeviceCommunicationService {
       await this.databaseService.releaseClient(transaction);
     }
   }
-  async updateStatus() {}
-  async deleteOne() {}
-  async deleteAll() {}
+  async deleteAll() {
+    const transaction = await this.databaseService.beginTransaction();
+    try {
+      const codeList = (await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query: `
+        SELECT code
+        FROM
+            device_communication
+        
+        `,
+        params: [],
+      })) as { rows: { code: number }[] };
+      const codeListNumber = codeList.rows.map((row) => ({ code: row.code }));
+      await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.DELETE,
+        table_name: 'device_communication',
+        conflict: ['code'],
+        data: codeListNumber,
+      });
+      this.databaseService.commitTransaction(transaction);
+    } catch (error) {
+      await this.databaseService.rollbackTransaction(transaction);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(
+        'Не получилось удалить созданные коды',
+        errorStack || String(error),
+      );
+    } finally {
+      await this.databaseService.releaseClient(transaction);
+    }
+  }
 }

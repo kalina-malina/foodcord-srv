@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Param, Get, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Param,
+  Get,
+  Logger,
+  Delete,
+} from '@nestjs/common';
 
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { DeviceCommunicationService } from './device-communication.service';
@@ -40,5 +48,11 @@ export class DeviceCommunicationController {
   @ApiOperation({ summary: 'Получением телевизором номера магазина' })
   async findOneTvPad(@Body() body: FindTvCodeDto) {
     return await this.deviceCommunicationService.findOneTvToPad(body);
+  }
+
+  @Delete('delete-all-codes')
+  @ApiOperation({ summary: 'Получением телевизором номера магазина' })
+  async deleteAllCode() {
+    return await this.deviceCommunicationService.deleteAll();
   }
 }

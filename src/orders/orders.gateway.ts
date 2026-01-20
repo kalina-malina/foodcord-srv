@@ -54,7 +54,6 @@ export class OrdersGateway implements OnGatewayConnection, OnGatewayDisconnect {
       clientId: client.id,
       timestamp: new Date().toISOString(),
     });
-
   }
 
   handleDisconnect(client: Socket) {
