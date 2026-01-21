@@ -28,8 +28,8 @@ export class CreateBannerTvDto {
   @IsOptional()
   @Transform(({ value }) => transformNumberArray(value))
   @IsArray()
-  @IsNumber({}, { each: true })
-  store?: number[];
+  @IsString({})
+  store?: string[];
 
   @ApiProperty({ description: 'Активен ли баннер', example: true })
   @IsOptional()

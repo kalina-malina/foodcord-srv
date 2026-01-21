@@ -32,7 +32,7 @@ export class StoresService {
     // Начинаем с базового запроса
     let query = `
       SELECT 
-        id_store::int as "idStore"
+        id_store::int as id, name, city,region
       FROM stores 
       WHERE 1=1
     `;
