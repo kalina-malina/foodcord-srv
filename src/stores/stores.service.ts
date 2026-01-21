@@ -11,7 +11,7 @@ export class StoresService {
     const result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
       query:
-        'SELECT id_store::int, name, city,region FROM stores ORDER BY name ASC',
+        'SELECT id_store::int as id, name, city,region FROM stores ORDER BY name ASC',
     });
     return result.rows;
   }
@@ -20,7 +20,7 @@ export class StoresService {
     const result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
       query:
-        'SELECT id_store::int, name, city,region FROM stores WHERE id_store = $1',
+        'SELECT id_store::int as id, name, city,region FROM stores WHERE id_store = $1',
       params: [id],
     });
     return result.rows[0];
