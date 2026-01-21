@@ -160,7 +160,7 @@ export class OrdersGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('ping')
-  async pong(@ConnectedSocket() client: Socket){
-    client.emit('pong')
+  async pong(@ConnectedSocket() client: Socket) {
+    client.emit('pong');
   }
 }

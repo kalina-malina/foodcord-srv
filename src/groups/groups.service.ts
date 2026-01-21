@@ -31,7 +31,7 @@ export class GroupsService {
 
     result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
-      query: 'SELECT name FROM groups WHERE LOWER(name) = LOWER($1)',
+      query: 'SELECT name FROM groups_test WHERE LOWER(name) = LOWER($1)',
       params: [NameGroup],
       transaction: transaction,
     });
@@ -40,12 +40,17 @@ export class GroupsService {
         'Ошибка при создании группы: похожее название уже существует',
       );
     }
+    const finalBody = {
+      id_store: createGroupDto.idStore,
+      image: createGroupDto.image,
+      name: createGroupDto.name,
+    };
     try {
       result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.INSERT,
-        table_name: 'groups',
+        table_name: 'groups_test',
         conflict: ['name'],
-        data: [createGroupDto],
+        data: [finalBody],
         transaction: transaction,
       });
       if (result && result.length > 0) {
@@ -58,7 +63,7 @@ export class GroupsService {
           );
           result = await this.databaseService.executeOperation({
             operation: GRUD_OPERATION.UPDATE,
-            table_name: 'groups',
+            table_name: 'groups_test',
             conflict: ['id'],
             columnUpdate: ['image'],
             data: [{ id: result[0].id, image: urlImage }],
@@ -90,7 +95,8 @@ export class GroupsService {
     try {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query: 'SELECT id::int, name, image FROM groups ORDER BY name DESC',
+        query:
+          'SELECT id::int, id_store::int[], name, image FROM groups_test ORDER BY name DESC',
         params: [],
       });
       return {
@@ -109,7 +115,8 @@ export class GroupsService {
     try {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query: 'SELECT id::int, name, image FROM groups WHERE id = $1',
+        query:
+          'SELECT id::int, id_store::int[], name, image FROM groups_test WHERE id = $1',
         params: [id],
       });
 
@@ -155,17 +162,23 @@ export class GroupsService {
         );
       }
       if (urlImage) {
-        columnUpdate = ['image', 'name'];
+        columnUpdate = ['id_store', 'name', 'image'];
       } else {
-        columnUpdate = ['name'];
+        columnUpdate = ['id_store', 'name'];
       }
-
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.UPDATE,
-        table_name: 'groups',
+        table_name: 'groups_test',
         conflict: ['id'],
         columnUpdate: columnUpdate,
-        data: [{ id: id, image: urlImage, name: NameGroup }],
+        data: [
+          {
+            id: id,
+            id_store: updateGroupDto.idStore,
+            name: NameGroup,
+            image: urlImage,
+          },
+        ],
       });
 
       if (result && result.length > 0) {
@@ -195,7 +208,7 @@ export class GroupsService {
     try {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.DELETE,
-        table_name: 'groups',
+        table_name: 'groups_test',
         conflict: ['id'],
         data: [{ id }],
         transaction: transaction,
@@ -203,7 +216,7 @@ export class GroupsService {
 
       await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query: `UPDATE products_main 
+        query: `UPDATE products_main_test 
                   SET groups = array_remove(groups, $1);`,
         params: [id],
         transaction: transaction,
@@ -228,6 +241,26 @@ export class GroupsService {
       };
     } finally {
       await this.databaseService.releaseClient(transaction);
+    }
+  }
+
+  async findAllPerStore(idStore: number) {
+    try {
+      const result = await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query:
+          'SELECT id::int, name, image FROM groups_test where $1 = any(id_store) ORDER BY name DESC ',
+        params: [idStore],
+      });
+      return {
+        success: true,
+        data: result.rows,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: `Ошибка при получении списка групп: ${error.message}`,
+      };
     }
   }
 }
