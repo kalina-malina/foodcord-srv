@@ -26,6 +26,13 @@ export class BannerTvService {
   }> {
     let result = null;
 
+    if (!createBannerTvDto.store || createBannerTvDto.store.length < 1){
+      throw new ConflictException(
+        'Ошибка при создании баннера TV: не принимаем пустое поле store',
+      );
+
+    }
+
     const NameBanner = transformName(createBannerTvDto.name);
 
     result = await this.databaseService.executeOperation({
@@ -122,7 +129,7 @@ export class BannerTvService {
         operation: GRUD_OPERATION.QUERY,
         query: `SELECT id::int, name, url, type, seconds, store, is_active as "isActive", tv_number as "tvNumber", "create_at" as "createAt", "updated_at" as "updatedAt" 
           FROM banner_tv_test 
-          where $1 = any(store)
+          where $1 = any(store) and is_active = true
           ORDER BY id DESC`,
         params: [idStore],
       });
@@ -160,6 +167,12 @@ export class BannerTvService {
 
   async update(id: number, updateBannerTvDto: UpdateBannerTvDto) {
     let result = null;
+    if (!updateBannerTvDto.store || updateBannerTvDto.store.length < 1){
+      throw new ConflictException(
+        'Ошибка при создании баннера TV: не принимаем пустое поле store',
+      );
+
+    }
     const transaction: PoolClient =
       await this.databaseService.beginTransaction();
 
