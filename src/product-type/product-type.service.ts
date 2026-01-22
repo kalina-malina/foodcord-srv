@@ -31,7 +31,7 @@ export class ProductTypeService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int,  name_original as name, description, weight::int, type, image FROM products_original_test WHERE type = $1',
+          'SELECT id::int,  id_product as "idProduct", name_original as name, description, weight::int, type, image FROM products_original_test WHERE type = $1',
         params: [TYPE_PRODUCT_ENUM.TYPE],
       });
       if (result.rows.length === 0) {
@@ -53,7 +53,7 @@ export class ProductTypeService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, name_original as name, description, weight::int,  type, image FROM products_original_test WHERE type = $1 AND id = $2',
+          'SELECT id::int, id_product as "idProduct", name_original as name, description, weight::int,  type, image FROM products_original_test WHERE type = $1 AND id = $2',
         params: [TYPE_PRODUCT_ENUM.TYPE, id],
       });
       if (result.rows.length === 0) {
@@ -73,7 +73,7 @@ export class ProductTypeService {
     try {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query: `SELECT id::int, name_original as name, description, weight::int,  type, image, price 
+        query: `SELECT id::int, id_product as "idProduct", name_original as name, description, weight::int,  type, image, price 
           FROM products_original_test pot
           LEFT JOIN product_original_store_price posp ON posp.id_product = pot.id_product
           WHERE type = $1 AND id = $2 AND id_store = $3`,
