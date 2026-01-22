@@ -30,7 +30,7 @@ async function bootstrap() {
       forbidNonWhitelisted: false,
       transform: true,
       transformOptions: {
-        enableImplicitConversion: true,
+        enableImplicitConversion: false,
       },
     }),
   );

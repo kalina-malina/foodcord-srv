@@ -1,12 +1,12 @@
-import { transformNumberArray } from '@/utils/transform-array';
+import { transformNumber, transformNumberArray } from '@/utils/transform-array';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
   IsString,
   IsOptional,
   IsNumber,
-  //IsBoolean,
   IsArray,
+  IsBoolean,
 } from 'class-validator';
 
 export class CreateBannerTvDto {
@@ -31,9 +31,11 @@ export class CreateBannerTvDto {
   store?: string[];
 
   @ApiProperty({ description: 'Активен ли баннер', example: 'false' })
-  @Transform(({ value }) => String(value))
+  @Transform(({ value }) => {
+    return value === 'true';
+  })
   //@IsOptional()
-  @IsString()
+  @IsBoolean()
   is_active: boolean;
 
   @IsOptional()
@@ -49,7 +51,9 @@ export class CreateBannerTvDto {
     description: 'Номер телевизора (1/2)',
     example: 1,
   })
-  @IsOptional()
+  @Transform(({ value }) => {
+    return transformNumber(value);
+  })
   @IsNumber()
   tv_number: number;
 }

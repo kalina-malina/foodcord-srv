@@ -30,7 +30,6 @@ export class BannerTvController {
     @Body() createBannerTvDto: CreateBannerTvDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    //console.log(createBannerTvDto);
     if (file) {
       createBannerTvDto.file = file;
     }
