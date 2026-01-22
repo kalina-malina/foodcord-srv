@@ -62,8 +62,7 @@ export class ProductMainService {
       !ingredients ||
       !type ||
       !color ||
-      !extras ||
-      !idStore
+      !extras 
     ) {
       return {
         message: 'Не все поля заполнены',

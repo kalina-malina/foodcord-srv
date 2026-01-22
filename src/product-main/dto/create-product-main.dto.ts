@@ -127,7 +127,7 @@ export class CreateProductMainAndStoreDto extends CreateProductMainDto {
   })
   @Transform(({ value }) => transformNumberArray(value))
   @IsArray()
-  @IsNumber({}, { each: true })
+  @IsOptional()
   idStore: number[];
 }
 export class CreateProductTypeDto {

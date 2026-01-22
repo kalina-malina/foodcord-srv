@@ -9,7 +9,6 @@ export class CreateCodeDto {
     return transformNumber(value);
   })
   @IsNumber()
-
   @IsOptional()
   idStore?: number;
 }

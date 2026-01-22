@@ -9,7 +9,8 @@ import {
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { TYPE_PRODUCT_ENUM } from '@/product-original/enum/type-prodict.enum';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
+import { transformNumber } from '@/utils/transform-array';
 
 export class UpdateProductTypeDto {
   @ApiProperty({ description: 'Название типа продукта', required: false })
@@ -23,6 +24,7 @@ export class UpdateProductTypeDto {
   description?: string;
 
   @ApiProperty({ description: 'Вес', required: false })
+  @Transform(({ value }) => transformNumber(value))
   @IsOptional()
   @IsNumber()
   weight?: number;
