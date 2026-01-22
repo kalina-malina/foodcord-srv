@@ -5,7 +5,7 @@ import {
   IsString,
   IsOptional,
   IsNumber,
-  IsBoolean,
+  //IsBoolean,
   IsArray,
 } from 'class-validator';
 
@@ -30,9 +30,10 @@ export class CreateBannerTvDto {
   @IsArray()
   store?: string[];
 
-  @ApiProperty({ description: 'Активен ли баннер', example: true })
-  @IsOptional()
-  @IsBoolean()
+  @ApiProperty({ description: 'Активен ли баннер', example: 'false' })
+  @Transform(({ value }) => String(value))
+  //@IsOptional()
+  @IsString()
   is_active: boolean;
 
   @IsOptional()

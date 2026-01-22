@@ -25,6 +25,7 @@ export class BannerTvService {
     message: string;
   }> {
     let result = null;
+    //console.log(createBannerTvDto);
 
     const NameBanner = transformName(createBannerTvDto.name);
 

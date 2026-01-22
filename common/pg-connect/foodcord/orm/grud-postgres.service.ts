@@ -354,9 +354,6 @@ export class DatabaseService {
           }),
           ...conflict.map((col) => row[col]),
         ];
-        console.log(data);
-        console.log(updateQuery);
-        console.log(values);
         const result = await (transaction || this.pool).query(
           updateQuery,
           values,
