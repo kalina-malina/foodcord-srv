@@ -62,7 +62,7 @@ export class ProductMainService {
       !ingredients ||
       !type ||
       !color ||
-      !extras 
+      !extras
     ) {
       return {
         message: 'Не все поля заполнены',

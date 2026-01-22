@@ -7,6 +7,8 @@ import {
   IsString,
 } from 'class-validator';
 import { RECEIVING_METHODS } from '../enum/receiving-methods.enum';
+import { Transform } from 'class-transformer';
+import { transformNumber } from '@/utils/transform-array';
 
 export class ProductIncludeDto {
   @ApiProperty({ description: 'ID дополнения в БД' })
@@ -87,6 +89,7 @@ export class CreateOrderDto {
   products: ProductDto[];
 
   @ApiProperty({ description: 'ID магазина' })
+  @Transform(({ value }) => transformNumber(value))
   @IsNumber()
   idStore: number;
 
