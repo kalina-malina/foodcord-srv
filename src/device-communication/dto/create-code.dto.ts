@@ -1,15 +1,24 @@
+import { transformNumber } from '@/utils/transform-array';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateCodeDto {
   @ApiProperty({ description: 'ID магазина' })
+  @Transform(({ value }) => {
+    return transformNumber(value);
+  })
   @IsNumber()
+
   @IsOptional()
   idStore?: number;
 }
 
 export class CreateCodeTvDto {
   @ApiProperty({ description: 'Код' })
+  @Transform(({ value }) => {
+    return transformNumber(value);
+  })
   @IsNumber()
   @IsOptional()
   code: number;
@@ -17,12 +26,18 @@ export class CreateCodeTvDto {
 
 export class FindCodeDto {
   @ApiProperty({ description: 'Код' })
+  @Transform(({ value }) => {
+    return transformNumber(value);
+  })
   @IsNumber()
   code: number;
 }
 
 export class FindTvCodeDto extends FindCodeDto {
   @ApiProperty({ description: 'ID магазина' })
+  @Transform(({ value }) => {
+    return transformNumber(value);
+  })
   @IsNumber()
   idStore: number;
 }
@@ -33,6 +48,9 @@ export class CreateCodeResponseDto {
   message: string;
 
   @ApiProperty({ description: 'Код' })
+  @Transform(({ value }) => {
+    return transformNumber(value);
+  })
   @IsNumber()
   code: number;
 }
@@ -48,9 +66,15 @@ export class FindCodeResponseDto {
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    return transformNumber(value);
+  })
   @IsNumber()
   idStore?: number;
   @ApiProperty({ description: 'Ответ' })
+  @Transform(({ value }) => {
+    return value === 'true';
+  })
   @IsBoolean()
   success: boolean;
 }

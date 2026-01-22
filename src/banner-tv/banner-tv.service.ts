@@ -26,11 +26,10 @@ export class BannerTvService {
   }> {
     let result = null;
 
-    if (!createBannerTvDto.store || createBannerTvDto.store.length < 1){
+    if (!createBannerTvDto.store || createBannerTvDto.store.length < 1) {
       throw new ConflictException(
         'Ошибка при создании баннера TV: не принимаем пустое поле store',
       );
-
     }
 
     const NameBanner = transformName(createBannerTvDto.name);
@@ -167,11 +166,10 @@ export class BannerTvService {
 
   async update(id: number, updateBannerTvDto: UpdateBannerTvDto) {
     let result = null;
-    if (!updateBannerTvDto.store || updateBannerTvDto.store.length < 1){
+    if (!updateBannerTvDto.store || updateBannerTvDto.store.length < 1) {
       throw new ConflictException(
         'Ошибка при создании баннера TV: не принимаем пустое поле store',
       );
-
     }
     const transaction: PoolClient =
       await this.databaseService.beginTransaction();
