@@ -55,4 +55,4 @@ export const transformStringArray = (value: any) =>
 export const transformBooleanArray = (value: any) =>
   transformArray(value, { type: 'boolean' });
 
-export const transformNumber = (value:any) => Number(value)
+export const transformNumber = (value: any) => Number(value);
