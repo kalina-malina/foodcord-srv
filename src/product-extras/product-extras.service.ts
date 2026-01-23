@@ -27,7 +27,7 @@ export class ProductExtrasService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, name_original as name, description, weight::int,  type, image FROM products_original_test WHERE type = $1',
+          'SELECT id::int, id_product::int as "idProduct", name_original as name, description, weight::int,  type, image FROM products_original_test WHERE type = $1',
         params: [TYPE_PRODUCT_ENUM.EXTRAS],
       });
       if (result.rows.length === 0) {
@@ -49,7 +49,7 @@ export class ProductExtrasService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, name_original as name, description, weight::int,  type, image FROM products_original_test WHERE type = $1 AND id = $2',
+          'SELECT id::int, id_product::int as "idProduct",name_original as name, description, weight::int,  type, image FROM products_original_test WHERE type = $1 AND id = $2',
         params: [TYPE_PRODUCT_ENUM.EXTRAS, id],
       });
       if (result.rows.length === 0) {
