@@ -1,7 +1,7 @@
 import { transformNumberArray } from '@/utils/transform-array';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsArray, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsString } from 'class-validator';
 
 export class CreateGroupDto {
   @ApiProperty({ description: 'Название группы', example: 'Пицца' })
@@ -14,7 +14,6 @@ export class CreateGroupDto {
   })
   @Transform(({ value }) => transformNumberArray(value))
   @IsArray()
-  @IsNumber({}, { each: true })
   idStore: number[];
 
   @ApiProperty({
