@@ -96,7 +96,7 @@ export class GroupsService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, id_store::int[], name, image FROM groups_test ORDER BY name DESC',
+          'SELECT id::int, id_store::int[] as store, name, image FROM groups_test ORDER BY name DESC',
         params: [],
       });
       return {
