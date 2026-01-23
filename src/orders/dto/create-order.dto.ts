@@ -90,7 +90,7 @@ export class CreateOrderDto {
 
   @ApiProperty({ description: 'ID магазина' })
   @Transform(({ value }) => transformNumber(value))
-  @IsNumber()
+  @IsArray()
   idStore: number;
 
   @ApiProperty({
