@@ -193,9 +193,6 @@ export class ProductTypeService {
         );
       }
 
-      if (body.list.length === 0) {
-        throw new BadRequestException('Список продуктов пуст');
-      }
 
       // 2. Проверяем существование продукта
       const existingProduct = (await this.databaseService.executeOperation({
@@ -221,9 +218,8 @@ export class ProductTypeService {
         transaction: transaction,
       });
 
-
-
       // 4. Обрабатываем каждый элемент списка
+      if (body.list.length > 0) {
       for (const item of body.list) {
         await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.INSERT_ON_UPDAETE,
@@ -252,7 +248,7 @@ export class ProductTypeService {
           params: [item.idStore, body.id],
           transaction: transaction,
         });
-      }
+      }}
 
       await this.databaseService.commitTransaction(transaction);
       return {
