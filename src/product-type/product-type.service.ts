@@ -211,12 +211,27 @@ export class ProductTypeService {
 
       // 3. Используем idProduct из DTO или из БД
       const idProduct = body.idProduct || existingProduct.rows[0]!.idProduct;
+      
+      // Удаляем все цены для данного продукта
       await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.DELETE,
         table_name: 'product_original_store_price',
         conflict: ['id_product'],
         data: [{ id_product: idProduct }],
+        transaction: transaction,
       });
+
+      // Удаляем все магазины из массива id_store для всех продуктов, где body.id находится в type или extras
+      await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query: `UPDATE products_main_test
+                SET id_store = ARRAY[]::bigint[]
+                WHERE $1 = ANY("type") OR $1 = ANY(extras)`,
+        params: [body.id],
+        transaction: transaction,
+      });
+
+
       // 4. Обрабатываем каждый элемент списка
       for (const item of body.list) {
         await this.databaseService.executeOperation({
@@ -246,7 +261,6 @@ export class ProductTypeService {
           params: [item.idStore, body.id],
           transaction: transaction,
         });
-        //console.log(item.idStore, body.id);
       }
 
       await this.databaseService.commitTransaction(transaction);
