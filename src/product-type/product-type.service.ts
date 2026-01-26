@@ -196,14 +196,15 @@ export class ProductTypeService {
       // 2. Проверяем существование продукта
       const existingProduct = (await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query: `SELECT id::int, id_product::int as "idProduct" FROM products_original_test WHERE id = $1`,
-        params: [body.id],
+        query: `SELECT id::int, id_product::int as "idProduct" FROM products_original_test WHERE id_product = $1`,
+        params: [body.idProduct],
         transaction: transaction,
       })) as { rows: { id: number; idProduct: number }[] };
 
       if (existingProduct.rows.length === 0) {
         throw new NotFoundException('Тип продукта не найден');
       }
+      const idMain = existingProduct.rows[0]!.id;
 
       // 3. Используем idProduct из DTO или из БД
       const idProduct = body.idProduct || existingProduct.rows[0]!.idProduct;
@@ -244,7 +245,7 @@ export class ProductTypeService {
                     ELSE id_store
                   END
                   WHERE $2 = ANY("type") OR $2 = ANY(extras)`,
-            params: [item.idStore, body.id],
+            params: [item.idStore, idMain],
             transaction: transaction,
           });
         }
