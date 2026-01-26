@@ -1,5 +1,7 @@
 import { TYPE_PRODUCT_ENUM } from '@/product-original/enum/type-prodict.enum';
+import { transformNumber } from '@/utils/transform-array';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateProductExtrasDto {
@@ -32,6 +34,7 @@ export class UpdateProductExtrasDto {
     description: 'Вес дополнительного продукта',
     required: false,
   })
+  @Transform(({ value }) => transformNumber(value))
   @IsOptional()
   @IsNumber()
   weight?: number;
