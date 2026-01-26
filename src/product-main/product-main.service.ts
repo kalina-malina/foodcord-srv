@@ -332,7 +332,7 @@ export class ProductMainService {
               'calories', pm.calories::numeric
           ) AS information
       FROM products_main_test pm
-      LEFT JOIN groups po ON po.id = ANY(pm.groups)
+      LEFT JOIN groups_test po ON po.id = ANY(pm.groups)
       LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
       LEFT JOIN products_original_test typ ON typ.id = ANY(pm.type) and typ.type = 'type'
       LEFT JOIN products_original_test ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
