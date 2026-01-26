@@ -12,7 +12,6 @@ import { UploadPhotoService } from '@/s3/upload-photo';
 import { ConfigService } from '@nestjs/config';
 import { S3_PATCH_ENUM } from '@/s3/enum/s3.pach.enum';
 import {
-  UpdatePriceProductPerStoreDto,
   UpdatePriceProductPerStoreListDto,
   UpdateProductTypeDto,
 } from './dto/update-product-type.dto';
@@ -183,67 +182,6 @@ export class ProductTypeService {
     }
   }
 
-  async updatePrice(body: UpdatePriceProductPerStoreDto) {
-    const transaction: PoolClient =
-      await this.databaseService.beginTransaction();
-    try {
-      const existingProduct = (await this.databaseService.executeOperation({
-        operation: GRUD_OPERATION.QUERY,
-        query:
-          'SELECT id, name_original, description, image, weight, id_product FROM products_original_test WHERE type = $1 AND id = $2',
-        params: [TYPE_PRODUCT_ENUM.TYPE, body.id],
-        transaction: transaction,
-      })) as {
-        rows: {
-          id: number;
-          name_original: string;
-          description: string;
-          image: string;
-          weight: number;
-          id_product: number;
-        }[];
-      };
-
-      if (existingProduct.rows.length === 0) {
-        throw new NotFoundException('Тип продукта не найден');
-      }
-
-      const { idStore, price } = body;
-
-      await this.databaseService.executeOperation({
-        operation: GRUD_OPERATION.INSERT_ON_UPDAETE,
-        table_name: 'product_original_store_price',
-        conflict: ['id_store', 'id_product'],
-        columnUpdate: ['price'],
-        data: [
-          {
-            id_store: idStore,
-            id_product: existingProduct.rows[0]?.id_product,
-            price: price,
-          },
-        ],
-        transaction: transaction,
-      });
-
-      await this.databaseService.commitTransaction(transaction);
-
-      return {
-        success: true,
-        message: `Цена типа продукта ${body.id} успешно обновлена`,
-      };
-    } catch (error: any) {
-      await this.databaseService.rollbackTransaction(transaction);
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new BadGatewayException(
-        `Ошибка при обновлении типа продукта: ${error.message}`,
-      );
-    } finally {
-      await this.databaseService.releaseClient(transaction);
-    }
-  }
-
   async updatePriceList(body: UpdatePriceProductPerStoreListDto) {
     const transaction: PoolClient =
       await this.databaseService.beginTransaction();
@@ -255,38 +193,32 @@ export class ProductTypeService {
         );
       }
 
-      // 2. Извлекаем ID продуктов
-      const productIds = body.list.map((item) => item.id);
-
-      if (productIds.length === 0) {
+      if (body.list.length === 0) {
         throw new BadRequestException('Список продуктов пуст');
       }
 
-      // 2. Формируем плейсхолдеры для IN: $2, $3, $4, ...
-      const idPlaceholders = productIds.map((_, i) => `$${i + 2}`).join(', ');
-
-      // 3. Собираем все параметры: сначала type, потом все ID
-      const params = [TYPE_PRODUCT_ENUM.TYPE, ...productIds];
-
+      // 2. Проверяем существование продукта
       const existingProduct = (await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query: `SELECT id::int, id_product::int as "idProduct" FROM products_original_test WHERE type = $1 AND id IN (${idPlaceholders})`,
-        params: params,
+        query: `SELECT id::int, id_product::int as "idProduct" FROM products_original_test WHERE id = $1`,
+        params: [body.id],
         transaction: transaction,
       })) as { rows: { id: number; idProduct: number }[] };
 
-      // 4. Создаём Map для быстрого поиска idProduct по id
-      const idProductMap = new Map<number, number>();
-      existingProduct.rows.forEach((row) => {
-        idProductMap.set(row.id, row.idProduct);
-      });
+      if (existingProduct.rows.length === 0) {
+        throw new NotFoundException('Тип продукта не найден');
+      }
 
-      // 5. Присоединяем idProduct к каждому элементу body.list
-      const listPrice = body.list.map((item) => ({
-        ...item,
-        idProduct: idProductMap.get(item.id) ?? null,
-      }));
-      for (const row of listPrice) {
+      // 3. Используем idProduct из DTO или из БД
+      const idProduct = body.idProduct || existingProduct.rows[0]!.idProduct;
+      await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.DELETE,
+        table_name: 'product_original_store_price',
+        conflict: ['id_product'],
+        data: [{ id_product: idProduct }],
+      });
+      // 4. Обрабатываем каждый элемент списка
+      for (const item of body.list) {
         await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.INSERT_ON_UPDAETE,
           table_name: 'product_original_store_price',
@@ -294,11 +226,24 @@ export class ProductTypeService {
           columnUpdate: ['price'],
           data: [
             {
-              id_product: row.idProduct,
-              id_store: row.idStore,
-              price: row.price,
+              id_product: idProduct,
+              id_store: item.idStore,
+              price: item.price,
             },
           ],
+          transaction: transaction,
+        });
+
+        await this.databaseService.executeOperation({
+          operation: GRUD_OPERATION.QUERY,
+          query: `UPDATE products_main_test
+                  SET id_store = CASE
+                    WHEN id_store IS NULL THEN ARRAY[$1]::bigint[]
+                    WHEN NOT ($1 = ANY(id_store)) THEN array_append(id_store, $1)
+                    ELSE id_store
+                  END
+                  WHERE $2 = ANY("type") OR $2 = ANY(extras)`,
+          params: [item.idStore, body.id],
           transaction: transaction,
         });
       }
@@ -319,7 +264,37 @@ export class ProductTypeService {
       await this.databaseService.releaseClient(transaction);
     }
   }
+  async getProductPriceToType(idProduct: number) {
+    const transaction: PoolClient =
+      await this.databaseService.beginTransaction();
+    try {
+      const existingProduct = await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query: `SELECT id_store::int as "idStore", price FROM product_original_store_price WHERE id_product = $1`,
+        params: [idProduct],
+        transaction: transaction,
+      });
+      if (existingProduct.rows.length === 0) {
+        throw new NotFoundException('Тип продукта не найден');
+      }
 
+      return {
+        success: true,
+        idProduct: idProduct,
+        data: existingProduct.rows,
+      };
+    } catch (error: any) {
+      await this.databaseService.rollbackTransaction(transaction);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadGatewayException(
+        `Ошибка при обновлении типов продуктов: ${error.message}`,
+      );
+    } finally {
+      await this.databaseService.releaseClient(transaction);
+    }
+  }
   async delete(id: number) {
     try {
       const existingProduct = await this.databaseService.executeOperation({

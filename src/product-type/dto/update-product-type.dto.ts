@@ -45,25 +45,33 @@ export class UpdateProductTypeDto {
 }
 
 export class UpdatePriceProductPerStoreDto {
-  @ApiProperty({ description: 'Магазин', required: false })
-  @IsNumber()
-  id: number;
-  @ApiProperty({ description: 'Магазин', required: false })
+  @ApiProperty({ description: 'Магазин', example: 42014 })
+  @Transform(({ value }) => transformNumber(value))
   @IsNumber()
   idStore: number;
 
-  @ApiProperty({ description: 'Цена', required: false })
+  @ApiProperty({ description: 'Цена', example: 99.99 })
+  @Transform(({ value }) => transformNumber(value))
   @IsNumber()
   price: number;
 }
 
 export class UpdatePriceProductPerStoreListDto {
+  @ApiProperty({ description: 'Продукт', example: 6 })
+  @Transform(({ value }) => transformNumber(value))
+  @IsNumber()
+  id: number;
+
+  @ApiProperty({ description: 'Продукт', example: 125195 })
+  @Transform(({ value }) => transformNumber(value))
+  @IsNumber()
+  idProduct: number;
   @ApiProperty({
     type: () => [UpdatePriceProductPerStoreDto],
     description: 'Список продуктов с ценами для обновления',
     example: [
-      { id: 289, idStore: 42014, price: 99.99 },
-      { id: 87, idStore: 42014, price: 149.5 },
+      { idStore: 42014, price: 99.99 },
+      { idStore: 42014, price: 149.5 },
     ],
   })
   @IsNotEmpty()
