@@ -193,7 +193,6 @@ export class ProductTypeService {
         );
       }
 
-
       // 2. Проверяем существование продукта
       const existingProduct = (await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
@@ -220,35 +219,36 @@ export class ProductTypeService {
 
       // 4. Обрабатываем каждый элемент списка
       if (body.list.length > 0) {
-      for (const item of body.list) {
-        await this.databaseService.executeOperation({
-          operation: GRUD_OPERATION.INSERT_ON_UPDAETE,
-          table_name: 'product_original_store_price',
-          conflict: ['id_product', 'id_store'],
-          columnUpdate: ['price'],
-          data: [
-            {
-              id_product: idProduct,
-              id_store: item.idStore,
-              price: item.price,
-            },
-          ],
-          transaction: transaction,
-        });
+        for (const item of body.list) {
+          await this.databaseService.executeOperation({
+            operation: GRUD_OPERATION.INSERT_ON_UPDAETE,
+            table_name: 'product_original_store_price',
+            conflict: ['id_product', 'id_store'],
+            columnUpdate: ['price'],
+            data: [
+              {
+                id_product: idProduct,
+                id_store: item.idStore,
+                price: item.price,
+              },
+            ],
+            transaction: transaction,
+          });
 
-        await this.databaseService.executeOperation({
-          operation: GRUD_OPERATION.QUERY,
-          query: `UPDATE products_main_test
+          await this.databaseService.executeOperation({
+            operation: GRUD_OPERATION.QUERY,
+            query: `UPDATE products_main_test
                   SET id_store = CASE
                     WHEN id_store IS NULL THEN ARRAY[$1]::bigint[]
                     WHEN NOT ($1 = ANY(id_store)) THEN array_append(id_store, $1)
                     ELSE id_store
                   END
                   WHERE $2 = ANY("type") OR $2 = ANY(extras)`,
-          params: [item.idStore, body.id],
-          transaction: transaction,
-        });
-      }}
+            params: [item.idStore, body.id],
+            transaction: transaction,
+          });
+        }
+      }
 
       await this.databaseService.commitTransaction(transaction);
       return {

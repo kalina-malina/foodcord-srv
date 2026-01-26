@@ -23,10 +23,6 @@ export class UpdateProductOriginslDto {
   })
   image?: Express.Multer.File;
 
-  @ApiProperty({ description: 'Цена' })
-  @IsNumber()
-  @IsNotEmpty()
-  price: number;
 
   @ApiProperty({
     description: `Тип продукта: ${Object.values(TYPE_PRODUCT_ENUM_VALUE).join(' или ')}`,

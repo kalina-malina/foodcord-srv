@@ -73,7 +73,6 @@ export class ProductOriginslService {
           image: urlImage,
           description: createProductDto.description,
           name: createProductDto.name,
-          price: createProductDto.price,
           type: createProductDto.type,
           weight: createProductDto.weight,
         },
