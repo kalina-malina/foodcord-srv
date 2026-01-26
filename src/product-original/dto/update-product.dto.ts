@@ -4,6 +4,7 @@ import {
   TYPE_PRODUCT_ENUM,
   TYPE_PRODUCT_ENUM_VALUE,
 } from '../enum/type-prodict.enum';
+import { Transform } from 'class-transformer';
 
 export class UpdateProductOriginslDto {
   @ApiProperty({ description: 'Название для просмотра' })
@@ -23,7 +24,6 @@ export class UpdateProductOriginslDto {
   })
   image?: Express.Multer.File;
 
-
   @ApiProperty({
     description: `Тип продукта: ${Object.values(TYPE_PRODUCT_ENUM_VALUE).join(' или ')}`,
   })
@@ -32,6 +32,10 @@ export class UpdateProductOriginslDto {
   type: TYPE_PRODUCT_ENUM;
 
   @ApiProperty({ description: 'Вес продукта' })
+  @Transform(({ value }) => {
+    const num = parseFloat(value);
+    return isNaN(num) ? 0 : num;
+  })
   @IsNumber()
   @IsNotEmpty()
   weight: number;

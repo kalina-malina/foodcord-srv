@@ -6,7 +6,7 @@ import {
   IsOptional,
   IsEnum,
 } from 'class-validator';
-import {  Transform } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { VARIANT_PRODUCT_ENUM } from '../enum/main.product.enum';
 import { transformNumberArray } from '@/utils/transform-array';
@@ -130,7 +130,6 @@ export class CreateProductMainAndStoreDto extends CreateProductMainDto {
   idStore: number[];
 }
 
-
 export class CreateIngredientDto {
   @ApiProperty({ description: 'Название ингредиента', example: 'Пепперони' })
   @IsString()
@@ -196,8 +195,6 @@ export class CreateProductInformationDto {
   @IsNumber()
   calories: number;
 }
-
-
 
 export class CopyProductFromStore {
   @ApiProperty({ description: 'Номер основного продукта', example: [1, 2, 3] })
