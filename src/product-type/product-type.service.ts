@@ -246,6 +246,7 @@ export class ProductTypeService {
           params: [item.idStore, body.id],
           transaction: transaction,
         });
+        //console.log(item.idStore, body.id);
       }
 
       await this.databaseService.commitTransaction(transaction);

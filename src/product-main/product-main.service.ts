@@ -240,7 +240,7 @@ export class ProductMainService {
           ) AS information,
            pm.id_store::int[] as "IdStore"
       FROM products_main_test pm
-      LEFT JOIN groups po ON po.id = ANY(pm.groups)
+      LEFT JOIN groups_test po ON po.id = ANY(pm.groups)
       LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
       LEFT JOIN products_original typ ON typ.id = ANY(pm.type) and typ.type = 'type'
       LEFT JOIN products_original ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
