@@ -330,7 +330,8 @@ export class ProductMainService {
               'proteins', pm.proteins::numeric,
               'carbohydrates', pm.carbohydrates::numeric,
               'calories', pm.calories::numeric
-          ) AS information
+          ) AS information,
+           COALESCE(to_jsonb(pm.id_store), '[]'::jsonb) AS "IdStore"
       FROM products_main_test pm
       LEFT JOIN groups_test po ON po.id = ANY(pm.groups)
       LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
@@ -345,7 +346,7 @@ export class ProductMainService {
       GROUP BY
           pm.id, pm.name, pm.image, pm.composition, pm.description,
           pm.fats, pm.proteins, pm.carbohydrates, pm.calories,
-          pm.variant, pm.groups, pm.subgroups;
+          pm.variant, pm.groups, pm.subgroups, pm.id_store;
     `;
 
     const result = await this.databaseService.executeOperation({
@@ -360,6 +361,7 @@ export class ProductMainService {
 
     return result.rows;
   }
+
 
   async findOne(id: number) {
     const query = `
@@ -423,7 +425,8 @@ export class ProductMainService {
               'proteins', pm.proteins::numeric,
               'carbohydrates', pm.carbohydrates::numeric,
               'calories', pm.calories::numeric
-          ) AS information
+          ) AS information,
+          COALESCE(to_jsonb(pm.id_store), '[]'::jsonb) AS "IdStore"
       FROM products_main_test pm
       LEFT JOIN groups_test po ON po.id = ANY(pm.groups)
       LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
@@ -436,7 +439,7 @@ export class ProductMainService {
       GROUP BY
           pm.id, pm.name, pm.image, pm.composition, pm.description,
           pm.fats, pm.proteins, pm.carbohydrates, pm.calories,
-          pm.variant, pm.groups, pm.subgroups;
+          pm.variant, pm.groups, pm.subgroups, pm.id_store;
     `;
 
     const result = await this.databaseService.executeOperation({
@@ -451,6 +454,7 @@ export class ProductMainService {
 
     return result.rows[0];
   }
+
 
   async findOnePerStore(id: number, idStore: number) {
     const query = `
