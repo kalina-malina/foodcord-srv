@@ -277,9 +277,6 @@ export class ProductTypeService {
         params: [idProduct],
         transaction: transaction,
       });
-      if (existingProduct.rows.length === 0) {
-        throw new NotFoundException('Тип продукта не найден');
-      }
 
       return {
         success: true,

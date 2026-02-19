@@ -362,7 +362,6 @@ export class ProductMainService {
     return result.rows;
   }
 
-
   async findOne(id: number) {
     const query = `
          SELECT
@@ -454,7 +453,6 @@ export class ProductMainService {
 
     return result.rows[0];
   }
-
 
   async findOnePerStore(id: number, idStore: number) {
     const query = `
