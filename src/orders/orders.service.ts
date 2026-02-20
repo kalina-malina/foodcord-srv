@@ -33,6 +33,24 @@ export class OrdersService {
         throw new Error('Продукты должны быть массивом');
       }
 
+      const maxIdResult = await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query: `
+          SELECT COALESCE(MAX(daily_id), 0)::int as max_id 
+          FROM ${this.orderTable} 
+          WHERE id_store = $1 
+            AND date(create_at) = CURRENT_DATE
+        `,
+        params: [createOrderDto.idStore],
+        transaction: transaction,
+      });
+
+      let nextDailyId = maxIdResult.rows[0].max_id + 1;
+
+      if (nextDailyId > 999) {
+        nextDailyId = 1;
+      }
+
       // Преобразуем каждый продукт в правильный объект
       const normalizedProducts = createOrderDto.products.map((product) => ({
         id: Number(product.id),
@@ -54,9 +72,10 @@ export class OrdersService {
 
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query: `INSERT INTO ${this.orderTable} (id_store, phone_number, products, status, receiving_method, create_at, updated_at) VALUES ($1, $2, $3::json, $4, $5, NOW(), NOW()) RETURNING *`,
+        query: `INSERT INTO ${this.orderTable} (id_store, daily_id, phone_number, products, status, receiving_method, create_at, updated_at) VALUES ($1, $2, $3, $4::json, $5, $6, NOW(), NOW()) RETURNING *`,
         params: [
           createOrderDto.idStore,
+          nextDailyId,
           createOrderDto.phoneNumber || null,
           productsJson,
           ORDERS_STATUS.NEW,
@@ -100,6 +119,7 @@ export class OrdersService {
       const orderData = {
         message: 'Заказ создан',
         orderId: +result.rows[0]?.id,
+        dailyId: +result.rows[0]?.daily_id,
         products: normalizedProducts,
         idStore: createOrderDto.idStore,
         phoneNumber: createOrderDto.phoneNumber,
@@ -130,7 +150,7 @@ export class OrdersService {
   async findAll() {
     const result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
-      query: `SELECT id::int, id_store::int, phone_number,
+      query: `SELECT id::int, id_store::int, daily_id::int, phone_number,
        products, status, receiving_method,
        TO_CHAR(create_at, 'DD.MM.YYYY, HH24:MI:SS') as create_at,
        TO_CHAR(updated_at, 'DD.MM.YYYY, HH24:MI:SS') as updated_at
@@ -192,7 +212,7 @@ export class OrdersService {
   async findAllStoreOrders(idStore: number) {
     const result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
-      query: `SELECT id::int, id_store::int, phone_number,
+      query: `SELECT id::int, id_store::int, daily_id::int, phone_number,
        products, status, receiving_method,
        TO_CHAR(create_at, 'DD.MM.YYYY, HH24:MI:SS') as create_at,
        TO_CHAR(updated_at, 'DD.MM.YYYY, HH24:MI:SS') as updated_at
@@ -256,7 +276,7 @@ export class OrdersService {
   async findOne(id: string) {
     const result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
-      query: `SELECT id::int, id_store::int, phone_number, products, status, receiving_method,
+      query: `SELECT id::int, id_store::int, daily_id::int, phone_number, products, status, receiving_method,
       TO_CHAR(create_at, 'DD.MM.YYYY, HH24:MI:SS') as create_at,
       TO_CHAR(updated_at, 'DD.MM.YYYY, HH24:MI:SS') as updated_at 
       FROM ${this.orderTable} WHERE id = $1`,
