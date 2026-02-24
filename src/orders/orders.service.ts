@@ -85,29 +85,29 @@ export class OrdersService {
       });
       ///цена подставляем явно
 
-      // const productPositions = normalizedProducts.map((product, index) => ({
-      //   positionOrder: index + 1,
-      //   code: product.id.toString(),
-      //   quantity: product.count,
-      //   unitPrice: product.price,
-      //   totalPrice: product.price * product.count,
-      //   discountValue: 0,
-      //   isFixedPrice: true,
-      //   calculationMethod: 4,
-      // }));
+      const productPositions = normalizedProducts.map((product, index) => ({
+        positionOrder: index + 1,
+        code: product.id.toString(),
+        quantity: product.count,
+        unitPrice: product.price,
+        totalPrice: product.price * product.count,
+        discountValue: 0,
+        isFixedPrice: true,
+        calculationMethod: 4,
+      }));
 
       // Отправляем заказ в SetRetail10
-      // const sendResult = await this.sendOrderService.sendOrder(
-      //   `IM${result.rows[0]?.id}`,
-      //   result.rows[0]?.id_store,
-      //   productPositions,
-      // );
-      // if (!sendResult.success) {
-      //   return {
-      //     message: `Ошибка при отправке заказа в SetRetail10 ${sendResult.status} ${sendResult.data}`,
-      //     error: sendResult.message,
-      //   };
-      // }
+      const sendResult = await this.sendOrderService.sendOrder(
+        `IM${result.rows[0]?.id}`,
+        result.rows[0]?.id_store,
+        productPositions,
+      );
+      if (!sendResult.success) {
+        return {
+          message: `Ошибка при отправке заказа в SetRetail10 ${sendResult.status} ${sendResult.data}`,
+          error: sendResult.message,
+        };
+      }
 
       // const orderData = {
       //   message: 'Заказ создан',
