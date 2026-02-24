@@ -524,13 +524,13 @@ export class ProductMainService {
       LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
       LEFT JOIN products_original typ ON typ.id = ANY(pm.type) and typ.type = 'type'
       LEFT JOIN products_original ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
-      LEFT JOIN product_original_store_price ptype on typ.id_product = ptype.id_product and ptype.id_store = ANY(pm.id_store)
-      LEFT JOIN product_original_store_price etype on ext.id_product = etype.id_product and etype.id_store = ANY(pm.id_store)
+      LEFT JOIN product_original_store_price ptype on typ.id_product = ptype.id_product and ptype.id_store = ANY(pm.id_store)  and ptype.id_store = $2
+      LEFT JOIN product_original_store_price etype on ext.id_product = etype.id_product and etype.id_store = ANY(pm.id_store) and etype.id_store = $2
       LEFT JOIN products_main_test inf ON inf.id = pm.id
       LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
       WHERE pm.id = $1
       and $2 = ANY(pm.id_store)
-      and ptype.price is not null 
+      and ptype.price is not null
       GROUP BY
           pm.id, pm.name, pm.image, pm.composition, pm.description,
           pm.fats, pm.proteins, pm.carbohydrates, pm.calories,
