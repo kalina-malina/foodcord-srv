@@ -337,8 +337,8 @@ export class ProductMainService {
       LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
       LEFT JOIN products_original_test typ ON typ.id = ANY(pm.type) and typ.type = 'type'
       LEFT JOIN products_original_test ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
-      LEFT JOIN product_original_store_price ptype on typ.id_product = ptype.id_product and ptype.id_store = ANY(pm.id_store)
-      LEFT JOIN product_original_store_price etype on ext.id_product = etype.id_product and etype.id_store = ANY(pm.id_store)
+      LEFT JOIN product_original_store_price ptype on typ.id_product = ptype.id_product and ptype.id_store = ANY(pm.id_store) and ptype.id_store = $1
+      LEFT JOIN product_original_store_price etype on ext.id_product = etype.id_product and etype.id_store = ANY(pm.id_store) and etype.id_store = $1
       LEFT JOIN products_main_test inf ON inf.id = pm.id
       LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
       where $1 = ANY(pm.id_store)
