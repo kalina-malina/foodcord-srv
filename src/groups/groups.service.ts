@@ -31,7 +31,7 @@ export class GroupsService {
 
     result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
-      query: 'SELECT name FROM groups_test WHERE LOWER(name) = LOWER($1)',
+      query: 'SELECT name FROM groups WHERE LOWER(name) = LOWER($1)',
       params: [NameGroup],
       transaction: transaction,
     });
@@ -48,7 +48,7 @@ export class GroupsService {
     try {
       result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.INSERT,
-        table_name: 'groups_test',
+        table_name: 'groups',
         conflict: ['name'],
         data: [finalBody],
         transaction: transaction,
@@ -63,7 +63,7 @@ export class GroupsService {
           );
           result = await this.databaseService.executeOperation({
             operation: GRUD_OPERATION.UPDATE,
-            table_name: 'groups_test',
+            table_name: 'groups',
             conflict: ['id'],
             columnUpdate: ['image'],
             data: [{ id: result[0].id, image: urlImage }],
@@ -96,7 +96,7 @@ export class GroupsService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, id_store::int[] as store, name, image FROM groups_test ORDER BY name DESC',
+          'SELECT id::int, id_store::int[] as store, name, image FROM groups ORDER BY name DESC',
         params: [],
       });
       return {
@@ -116,7 +116,7 @@ export class GroupsService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, id_store::int[], name, image FROM groups_test WHERE id = $1',
+          'SELECT id::int, id_store::int[], name, image FROM groups WHERE id = $1',
         params: [id],
       });
 
@@ -168,7 +168,7 @@ export class GroupsService {
       }
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.UPDATE,
-        table_name: 'groups_test',
+        table_name: 'groups',
         conflict: ['id'],
         columnUpdate: columnUpdate,
         data: [
@@ -208,7 +208,7 @@ export class GroupsService {
     try {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.DELETE,
-        table_name: 'groups_test',
+        table_name: 'groups',
         conflict: ['id'],
         data: [{ id }],
         transaction: transaction,
@@ -216,7 +216,7 @@ export class GroupsService {
 
       await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query: `UPDATE products_main_test 
+        query: `UPDATE products_main 
                   SET groups = array_remove(groups, $1);`,
         params: [id],
         transaction: transaction,
@@ -249,7 +249,7 @@ export class GroupsService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, name, image FROM groups_test where $1 = any(id_store) ORDER BY name DESC ',
+          'SELECT id::int, name, image FROM groups where $1 = any(id_store) ORDER BY name DESC ',
         params: [idStore],
       });
       return {

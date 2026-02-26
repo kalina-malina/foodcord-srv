@@ -35,7 +35,7 @@ export class BannerMainService {
 
     result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
-      query: 'SELECT name FROM banner_main_test WHERE LOWER(name) = LOWER($1)',
+      query: 'SELECT name FROM banner_main WHERE LOWER(name) = LOWER($1)',
       params: [NameBanner],
     });
     if (result && result.rows.length > 0) {
@@ -51,7 +51,7 @@ export class BannerMainService {
     try {
       result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.INSERT,
-        table_name: 'banner_main_test',
+        table_name: 'banner_main',
         conflict: ['name'],
         data: [{ ...bannerData, name: NameBanner }],
         transaction: transaction,
@@ -73,7 +73,7 @@ export class BannerMainService {
 
           result = await this.databaseService.executeOperation({
             operation: GRUD_OPERATION.UPDATE,
-            table_name: 'banner_main_test',
+            table_name: 'banner_main',
             conflict: ['id'],
             columnUpdate: ['url', 'type'],
             data: [
@@ -109,7 +109,7 @@ export class BannerMainService {
         operation: GRUD_OPERATION.QUERY,
         query: `SELECT
            id:: int, seconds:: int, url, type, name, type, store, is_active as
-           "isActive", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_main_test ORDER BY id DESC`,
+           "isActive", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_main ORDER BY id DESC`,
         params: [],
       });
       return {
@@ -131,7 +131,7 @@ export class BannerMainService {
         query: `SELECT
            id:: int, seconds:: int, url, type, name, type, store, is_active as
            "isActive", "create_at" as "createAt", "updated_at" as "updatedAt" 
-           FROM banner_main_test 
+           FROM banner_main 
            where $1 = ANY(store) and is_active = true
            ORDER BY id DESC`,
         params: [idStore],
@@ -153,7 +153,7 @@ export class BannerMainService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query: `SELECT id:: int, seconds:: int, url, type, name, type, store, is_active as
-           "isActive", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_main_test WHERE id = $1`,
+           "isActive", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_main WHERE id = $1`,
         params: [id],
       });
 
@@ -181,7 +181,7 @@ export class BannerMainService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query: `SELECT id:: int, seconds:: int, url, type, name, type, store, is_active as
-           "isActive", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_main_test 
+           "isActive", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_main 
            WHERE id = $1
            and $2 = ANY(store)`,
         params: [id, idStore],
@@ -229,7 +229,7 @@ export class BannerMainService {
         result = await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.QUERY,
           query:
-            'SELECT name FROM banner_main_test WHERE LOWER(name) = LOWER($1) AND id != $2',
+            'SELECT name FROM banner_main WHERE LOWER(name) = LOWER($1) AND id != $2',
           params: [NameBanner, id],
           transaction: transaction,
         });
@@ -248,7 +248,7 @@ export class BannerMainService {
       if (Object.keys(updateData).length > 0) {
         result = await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
-          table_name: 'banner_main_test',
+          table_name: 'banner_main',
           conflict: ['id'],
           columnUpdate: ['name', 'seconds', 'is_active', 'store'],
           data: [{ id, ...updateData }],
@@ -269,7 +269,7 @@ export class BannerMainService {
 
         result = await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
-          table_name: 'banner_main_test',
+          table_name: 'banner_main',
           conflict: ['id'],
           columnUpdate: ['url', 'type'],
           data: [
@@ -306,7 +306,7 @@ export class BannerMainService {
 
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.DELETE,
-        table_name: 'banner_main_test',
+        table_name: 'banner_main',
         conflict: ['id'],
         data: [{ id }],
       });

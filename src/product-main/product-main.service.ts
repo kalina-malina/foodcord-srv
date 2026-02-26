@@ -75,7 +75,7 @@ export class ProductMainService {
       //проверка сушествования в базе названия
       const checkName = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query: `SELECT id FROM products_main_test WHERE lower(name) = lower('${name}')`,
+        query: `SELECT id FROM products_main WHERE lower(name) = lower('${name}')`,
       });
       if (checkName.length > 0) {
         throw new ConflictException('Название продукта уже существует');
@@ -83,7 +83,7 @@ export class ProductMainService {
 
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.INSERT,
-        table_name: 'products_main_test',
+        table_name: 'products_main',
         conflict: ['name'],
         columnUpdate: [
           'name',
@@ -151,7 +151,7 @@ export class ProductMainService {
 
         await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
-          table_name: 'products_main_test',
+          table_name: 'products_main',
           conflict: ['id'],
           columnUpdate: ['image'],
           transaction: transaction,
@@ -239,14 +239,14 @@ export class ProductMainService {
               'calories', pm.calories::numeric
           ) AS information,
            pm.id_store::int[] as "IdStore"
-      FROM products_main_test pm
-      LEFT JOIN groups_test po ON po.id = ANY(pm.groups)
+      FROM products_main pm
+      LEFT JOIN groups po ON po.id = ANY(pm.groups)
       LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
       LEFT JOIN products_original typ ON typ.id = ANY(pm.type) and typ.type = 'type'
       LEFT JOIN products_original ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
       LEFT JOIN product_original_store_price ptype on typ.id_product = ptype.id_product and ptype.id_store = ANY(pm.id_store)
       LEFT JOIN product_original_store_price etype on ext.id_product = etype.id_product and etype.id_store = ANY(pm.id_store)
-      LEFT JOIN products_main_test inf ON inf.id = pm.id
+      LEFT JOIN products_main inf ON inf.id = pm.id
       LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
       GROUP BY
           pm.id, pm.name, pm.image, pm.composition, pm.description,
@@ -332,14 +332,14 @@ export class ProductMainService {
               'calories', pm.calories::numeric
           ) AS information,
            COALESCE(to_jsonb(pm.id_store), '[]'::jsonb) AS "IdStore"
-      FROM products_main_test pm
-      LEFT JOIN groups_test po ON po.id = ANY(pm.groups)
+      FROM products_main pm
+      LEFT JOIN groups po ON po.id = ANY(pm.groups)
       LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
-      LEFT JOIN products_original_test typ ON typ.id = ANY(pm.type) and typ.type = 'type'
-      LEFT JOIN products_original_test ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
+      LEFT JOIN products_original typ ON typ.id = ANY(pm.type) and typ.type = 'type'
+      LEFT JOIN products_original ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
       LEFT JOIN product_original_store_price ptype on typ.id_product = ptype.id_product and ptype.id_store = ANY(pm.id_store) and ptype.id_store = $1
       LEFT JOIN product_original_store_price etype on ext.id_product = etype.id_product and etype.id_store = ANY(pm.id_store) and etype.id_store = $1
-      LEFT JOIN products_main_test inf ON inf.id = pm.id
+      LEFT JOIN products_main inf ON inf.id = pm.id
       LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
       where $1 = ANY(pm.id_store)
       and ptype.price is not null
@@ -426,13 +426,13 @@ export class ProductMainService {
               'calories', pm.calories::numeric
           ) AS information,
           COALESCE(to_jsonb(pm.id_store), '[]'::jsonb) AS "IdStore"
-      FROM products_main_test pm
-      LEFT JOIN groups_test po ON po.id = ANY(pm.groups)
+      FROM products_main pm
+      LEFT JOIN groups po ON po.id = ANY(pm.groups)
       LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
       LEFT JOIN products_original typ ON typ.id = ANY(pm.type) and typ.type = 'type'
       LEFT JOIN products_original ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
       
-      LEFT JOIN products_main_test inf ON inf.id = pm.id
+      LEFT JOIN products_main inf ON inf.id = pm.id
       LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
       WHERE pm.id = $1
       GROUP BY
@@ -519,14 +519,14 @@ export class ProductMainService {
               'carbohydrates', pm.carbohydrates::numeric,
               'calories', pm.calories::numeric
           ) AS information
-      FROM products_main_test pm
+      FROM products_main pm
       LEFT JOIN groups po ON po.id = ANY(pm.groups)
       LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
       LEFT JOIN products_original typ ON typ.id = ANY(pm.type) and typ.type = 'type'
       LEFT JOIN products_original ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
       LEFT JOIN product_original_store_price ptype on typ.id_product = ptype.id_product and ptype.id_store = ANY(pm.id_store)  and ptype.id_store = $2
       LEFT JOIN product_original_store_price etype on ext.id_product = etype.id_product and etype.id_store = ANY(pm.id_store) and etype.id_store = $2
-      LEFT JOIN products_main_test inf ON inf.id = pm.id
+      LEFT JOIN products_main inf ON inf.id = pm.id
       LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
       WHERE pm.id = $1
       and $2 = ANY(pm.id_store)
@@ -553,7 +553,7 @@ export class ProductMainService {
   async remove(id: number) {
     const result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
-      query: `DELETE FROM products_main_test WHERE id = ${id}`,
+      query: `DELETE FROM products_main WHERE id = ${id}`,
     });
     if (result.length === 0) {
       throw new BadRequestException('Продукт не найден');
@@ -580,7 +580,7 @@ export class ProductMainService {
       if (Object.keys(updateData).length > 0) {
         await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
-          table_name: 'products_main_test',
+          table_name: 'products_main',
           conflict: ['id'],
           columnUpdate: [
             'name',
@@ -639,7 +639,7 @@ export class ProductMainService {
 
         await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
-          table_name: 'products_main_test',
+          table_name: 'products_main',
           conflict: ['id'],
           columnUpdate: ['image'],
           transaction: transaction,
@@ -677,7 +677,7 @@ export class ProductMainService {
       if (Object.keys(updateData).length > 0) {
         await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
-          table_name: 'products_main_test',
+          table_name: 'products_main',
           conflict: ['id'],
           columnUpdate: [
             'name',
@@ -735,7 +735,7 @@ export class ProductMainService {
 
         await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
-          table_name: 'products_main_test',
+          table_name: 'products_main',
           conflict: ['id'],
           columnUpdate: ['image'],
           transaction: transaction,
@@ -772,7 +772,7 @@ export class ProductMainService {
 
       const result = (await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query: `SELECT id::int, id_store::int[] as "idStore" FROM products_main_test WHERE id IN (${placeholders})`,
+        query: `SELECT id::int, id_store::int[] as "idStore" FROM products_main WHERE id IN (${placeholders})`,
         params: copyProductFromStore.id,
       })) as { rows: { id: number; idStore: number[] }[] };
       const itogResult = result.rows.filter(
@@ -788,7 +788,7 @@ export class ProductMainService {
       for (const row of addResult) {
         await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
-          table_name: 'products_main_test',
+          table_name: 'products_main',
           conflict: ['id'],
           columnUpdate: ['id_store'],
           data: [

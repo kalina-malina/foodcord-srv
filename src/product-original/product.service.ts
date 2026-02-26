@@ -23,7 +23,7 @@ export class ProductOriginslService {
     const query = `
       SELECT id_product::int, name_original, ed, erpcode, deleted,
       group_code, vat::int, group_name, image, description, name
-      FROM products_original_test
+      FROM products_original
       WHERE 1=1 ${filtersGroups}
     `;
     const result = await this.databaseService.executeOperation({
@@ -57,7 +57,7 @@ export class ProductOriginslService {
 
     const result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.UPDATE,
-      table_name: 'products_original_test',
+      table_name: 'products_original',
       conflict: ['id_product'],
       columnUpdate: [
         'id_product',

@@ -19,7 +19,7 @@ export class OrdersService {
     this.orderTable =
       this.configService.get<string>('SERVER') === 'PROD'
         ? 'orders'
-        : 'orders_test';
+        : 'orders';
   }
 
   setGateway(gateway: any) {

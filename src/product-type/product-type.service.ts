@@ -30,7 +30,7 @@ export class ProductTypeService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int,  id_product::int as "idProduct", name_original as name, description, weight::int, type, image FROM products_original_test WHERE type = $1',
+          'SELECT id::int,  id_product::int as "idProduct", name_original as name, description, weight::int, type, image FROM products_original WHERE type = $1',
         params: [TYPE_PRODUCT_ENUM.TYPE],
       });
       if (result.rows.length === 0) {
@@ -52,7 +52,7 @@ export class ProductTypeService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, id_product::int as "idProduct", name_original as name, description, weight::int,  type, image FROM products_original_test WHERE type = $1 AND id = $2',
+          'SELECT id::int, id_product::int as "idProduct", name_original as name, description, weight::int,  type, image FROM products_original WHERE type = $1 AND id = $2',
         params: [TYPE_PRODUCT_ENUM.TYPE, id],
       });
       if (result.rows.length === 0) {
@@ -73,7 +73,7 @@ export class ProductTypeService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query: `SELECT id::int, id_product as "idProduct", name_original as name, description, weight::int,  type, image, price 
-          FROM products_original_test pot
+          FROM products_original pot
           LEFT JOIN product_original_store_price posp ON posp.id_product = pot.id_product
           WHERE type = $1 AND id = $2 AND id_store = $3`,
         params: [TYPE_PRODUCT_ENUM.TYPE, id, idStore],
@@ -99,7 +99,7 @@ export class ProductTypeService {
       const existingProduct = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id, name_original, description, image, weight FROM products_original_test WHERE type = $1 AND id = $2',
+          'SELECT id, name_original, description, image, weight FROM products_original WHERE type = $1 AND id = $2',
         params: [TYPE_PRODUCT_ENUM.TYPE, id],
         transaction: transaction,
       });
@@ -136,7 +136,7 @@ export class ProductTypeService {
       if (columnUpdate.length > 0) {
         await this.databaseService.executeOperation({
           operation: GRUD_OPERATION.UPDATE,
-          table_name: 'products_original_test',
+          table_name: 'products_original',
           conflict: ['id'],
           columnUpdate: columnUpdate,
           data: [updateData],
@@ -154,7 +154,7 @@ export class ProductTypeService {
         if (urlImage) {
           await this.databaseService.executeOperation({
             operation: GRUD_OPERATION.UPDATE,
-            table_name: 'products_original_test',
+            table_name: 'products_original',
             conflict: ['id'],
             columnUpdate: ['image'],
             data: [{ id, image: urlImage }],
@@ -196,7 +196,7 @@ export class ProductTypeService {
       // 2. Проверяем существование продукта
       const existingProduct = (await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query: `SELECT id::int, id_product::int as "idProduct" FROM products_original_test WHERE id_product = $1`,
+        query: `SELECT id::int, id_product::int as "idProduct" FROM products_original WHERE id_product = $1`,
         params: [body.idProduct],
         transaction: transaction,
       })) as { rows: { id: number; idProduct: number }[] };
@@ -238,7 +238,7 @@ export class ProductTypeService {
 
           await this.databaseService.executeOperation({
             operation: GRUD_OPERATION.QUERY,
-            query: `UPDATE products_main_test
+            query: `UPDATE products_main
                   SET id_store = CASE
                     WHEN id_store IS NULL THEN ARRAY[$1]::bigint[]
                     WHEN NOT ($1 = ANY(id_store)) THEN array_append(id_store, $1)
@@ -300,7 +300,7 @@ export class ProductTypeService {
       const existingProduct = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id, id_product, image FROM products_original_test WHERE type = $1 AND id = $2',
+          'SELECT id, id_product, image FROM products_original WHERE type = $1 AND id = $2',
         params: [TYPE_PRODUCT_ENUM.TYPE, id],
       });
 
@@ -326,7 +326,7 @@ export class ProductTypeService {
 
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.UPDATE,
-        table_name: 'products_original_test',
+        table_name: 'products_original',
         conflict: ['id'],
         columnUpdate: ['name', 'description', 'image', 'type', 'weight'],
         data: [
