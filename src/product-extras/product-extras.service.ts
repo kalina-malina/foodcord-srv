@@ -27,7 +27,7 @@ export class ProductExtrasService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, name_original as name, description, weight::int, price::int, type, image FROM products_original WHERE type = $1',
+          'SELECT id::int, id_product::int as "idProduct", name_original as name, description, weight::int,  type, image FROM products_original WHERE type = $1',
         params: [TYPE_PRODUCT_ENUM.EXTRAS],
       });
       if (result.rows.length === 0) {
@@ -49,7 +49,7 @@ export class ProductExtrasService {
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id::int, name_original as name, description, weight::int, price::int, type, image FROM products_original WHERE type = $1 AND id = $2',
+          'SELECT id::int, id_product::int as "idProduct",name_original as name, description, weight::int,  type, image FROM products_original WHERE type = $1 AND id = $2',
         params: [TYPE_PRODUCT_ENUM.EXTRAS, id],
       });
       if (result.rows.length === 0) {
@@ -73,7 +73,7 @@ export class ProductExtrasService {
       const existingProduct = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
         query:
-          'SELECT id, name_original, description, image, price, weight FROM products_original WHERE type = $1 AND id = $2',
+          'SELECT id, name_original, description, image, weight FROM products_original WHERE type = $1 AND id = $2',
         params: [TYPE_PRODUCT_ENUM.EXTRAS, id],
         transaction: transaction,
       });
@@ -82,8 +82,7 @@ export class ProductExtrasService {
         throw new NotFoundException('Дополнительный продукт не найден');
       }
 
-      const { name, description, price, weight, image, type } =
-        updateProductExtrasDto;
+      const { name, description, weight, image, type } = updateProductExtrasDto;
 
       const updateData: any = { id };
       const columnUpdate: string[] = [];
@@ -96,11 +95,6 @@ export class ProductExtrasService {
       if (description !== undefined) {
         updateData.description = description;
         columnUpdate.push('description');
-      }
-
-      if (price !== undefined) {
-        updateData.price = price;
-        columnUpdate.push('price');
       }
 
       if (weight !== undefined) {
@@ -195,21 +189,13 @@ export class ProductExtrasService {
         operation: GRUD_OPERATION.UPDATE,
         table_name: 'products_original',
         conflict: ['id'],
-        columnUpdate: [
-          'name',
-          'description',
-          'image',
-          'price',
-          'type',
-          'weight',
-        ],
+        columnUpdate: ['name', 'description', 'image', 'type', 'weight'],
         data: [
           {
             id: id,
             name: null,
             description: null,
             image: null,
-            price: 0,
             type: null,
             weight: null,
           },

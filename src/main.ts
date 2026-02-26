@@ -30,13 +30,13 @@ async function bootstrap() {
       forbidNonWhitelisted: false,
       transform: true,
       transformOptions: {
-        enableImplicitConversion: true,
+        enableImplicitConversion: false,
       },
     }),
   );
   app.useGlobalGuards(new RateLimitGuard(app.get(RedisService)));
   app.enableCors({
-    origin: ['https://statosphera.ru', 'statosphera.ru'],
+    origin: true, //['https://statosphera.ru', 'statosphera.ru'],
     methods: ['GET', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
       'Content-Type',

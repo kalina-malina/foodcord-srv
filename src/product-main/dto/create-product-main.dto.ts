@@ -4,10 +4,9 @@ import {
   IsString,
   IsArray,
   IsOptional,
-  ValidateNested,
   IsEnum,
 } from 'class-validator';
-import { Type, Transform } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { VARIANT_PRODUCT_ENUM } from '../enum/main.product.enum';
 import { transformNumberArray } from '@/utils/transform-array';
@@ -120,20 +119,15 @@ export class CreateProductMainDto {
   @IsString()
   color: string;
 }
-
-export class CreateProductTypeDto {
-  @ApiProperty({ description: 'Название типа', example: '25 см' })
-  @IsString()
-  @IsNotEmpty()
-  name: string;
-
-  @ApiProperty({ description: 'Цена типа', example: 399.9 })
-  @Transform(({ value }) => {
-    const num = parseFloat(value);
-    return isNaN(num) ? 0 : num;
+export class CreateProductMainAndStoreDto extends CreateProductMainDto {
+  @ApiProperty({
+    description: 'Номер магазина',
+    example: [42014, 42012, 3],
   })
-  @IsNumber()
-  price: number;
+  @Transform(({ value }) => transformNumberArray(value))
+  @IsArray()
+  @IsOptional()
+  idStore: number[];
 }
 
 export class CreateIngredientDto {
@@ -202,49 +196,21 @@ export class CreateProductInformationDto {
   calories: number;
 }
 
-export class CreateProductMainDtoDD {
-  @ApiProperty({ description: 'Название продукта', example: 'Пицца Маргарита' })
-  @IsString()
-  @IsNotEmpty()
-  name: string;
-
-  @ApiProperty({ description: 'Изображение продукта' })
-  @IsString()
-  @IsNotEmpty()
-  image: string;
-
-  @ApiProperty({ description: 'Базовая цена продукта', example: 399.9 })
-  @IsNumber()
-  price: number;
-
-  @ApiProperty({ description: 'Группы продукта', example: [1, 4] })
+export class CopyProductFromStore {
+  @ApiProperty({ description: 'Номер основного продукта', example: [1, 2, 3] })
+  @Transform(({ value }) => transformNumberArray(value))
   @IsArray()
   @IsNumber({}, { each: true })
-  group: number[];
-
-  @ApiProperty({ description: 'Подгруппы продукта', example: ['Классика'] })
-  @IsArray()
-  @IsString({ each: true })
-  subgroup: string[];
-
-  @ApiProperty({ description: 'Типы продукта', type: [CreateProductTypeDto] })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateProductTypeDto)
-  types: CreateProductTypeDto[];
+  id: number[];
 
   @ApiProperty({
-    description: 'Ингредиенты продукта',
-    type: [CreateIngredientDto],
+    description: 'Номер магазина, куда копировать продукты',
+    example: 42002,
   })
-  @IsArray()
-  ingredients: CreateIngredientDto[];
-
-  @ApiProperty({
-    description: 'Информация о продукте',
-    type: CreateProductInformationDto,
+  @Transform(({ value }) => {
+    const num = parseFloat(value);
+    return isNaN(num) ? 0 : num;
   })
-  @ValidateNested()
-  @Type(() => CreateProductInformationDto)
-  information: CreateProductInformationDto;
+  @IsNumber()
+  idStore: number;
 }

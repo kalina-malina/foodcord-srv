@@ -346,6 +346,7 @@ export class DatabaseService {
                               WHERE ${whereClauses}
                               RETURNING *;
                             `;
+
         const values = [
           ...columnUpdate.map((col) => {
             const value = row[col];
@@ -353,7 +354,6 @@ export class DatabaseService {
           }),
           ...conflict.map((col) => row[col]),
         ];
-
         const result = await (transaction || this.pool).query(
           updateQuery,
           values,

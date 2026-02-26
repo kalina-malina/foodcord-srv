@@ -14,7 +14,7 @@ import { RedisSessionService } from './session/redis.session.service';
 import moment from 'moment';
 import { DatabaseService } from '@/pg-connect/foodcord/orm/grud-postgres.service';
 import { GRUD_OPERATION } from '@/pg-connect/foodcord/orm/enum/metod.enum';
-
+import { DeviceCommunicationService } from '@/device-communication/device-communication.service';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -25,6 +25,7 @@ export class AuthService {
     private readonly cookieAuth: CookieAuth,
     private readonly redisSession: RedisSessionService,
     private readonly configService: ConfigService,
+    private readonly deviceCommunicationService: DeviceCommunicationService,
   ) {}
 
   async login(dto: LoginDtoAuthJWT, req: Request, res: Response) {
@@ -112,10 +113,21 @@ export class AuthService {
       },
       refreshTokenTTL,
     );
+    const resultDeviceCommunication =
+      await this.deviceCommunicationService.createCode({
+        idStore: user.idStore,
+      });
+    if (resultDeviceCommunication.code === 0) {
+      throw new BadRequestException({
+        auth: false,
+        message: 'Ошибка при создании кода',
+      });
+    }
     res.status(200).json({
       auth: true,
       role: user.role,
       store: { idStore: user.idStore, name: 'Молодежный 2' },
+      code: resultDeviceCommunication.code,
     });
   }
 

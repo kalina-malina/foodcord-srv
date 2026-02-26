@@ -39,13 +39,27 @@ export class BannerMainController {
     return this.bannerMainService.create(createBannerMainDto);
   }
 
-  @Get()
+  @Get('get-all-bunner-main')
   @ApiOperation({ summary: 'Получение списка всех баннеров' })
   async findAll() {
     return this.bannerMainService.findAll();
   }
 
-  @Get(':id')
+  @Get('get-all-bunners-per-store/:idStore')
+  @ApiOperation({ summary: 'Получение списка всех баннеров магазина' })
+  async findAllPerStore(@Param('idStore') idStore: string) {
+    return this.bannerMainService.findAllPerStore(+idStore);
+  }
+
+  @Get('get-one-bunner-per-store/:idStore/:id')
+  @ApiOperation({ summary: 'Получение баннера по ID' })
+  async findOneBunnerPerStore(
+    @Param('idStore') idStore: string,
+    @Param('id') id: string,
+  ) {
+    return this.bannerMainService.findOnePerStore(+idStore, +id);
+  }
+  @Get('get-one-bunner/:id')
   @ApiOperation({ summary: 'Получение баннера по ID' })
   async findOne(@Param('id') id: string) {
     return this.bannerMainService.findOne(+id);

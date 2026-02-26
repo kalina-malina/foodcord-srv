@@ -1,7 +1,8 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { StoresService } from './stores.service';
 import { JwtAuthGuard } from '@/auth/guards/auth.guard';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { SearchStoreDto } from './dto/create-store.dto';
 
 @Controller('stores')
 @ApiTags('Магазины')
@@ -24,5 +25,11 @@ export class StoresController {
   })
   findOne(@Param('id') id: string) {
     return this.storesService.findOne(+id);
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Поиск магазинов по параметрам' })
+  async findStorePerParams(@Body() searchStoreDto: SearchStoreDto) {
+    return await this.storesService.findStoresPerParams(searchStoreDto);
   }
 }

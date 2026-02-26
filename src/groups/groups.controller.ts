@@ -41,14 +41,19 @@ export class GroupsController {
     }
     return this.groupsService.create(createGroupDto);
   }
+  @Get('get-all-group-per-store/:idStore')
+  @ApiOperation({ summary: 'Получить все группы' })
+  findAllPerStore(@Param('idStore') idStore: string) {
+    return this.groupsService.findAllPerStore(+idStore);
+  }
 
-  @Get()
+  @Get('get-all-group')
   @ApiOperation({ summary: 'Получить все группы' })
   findAll() {
     return this.groupsService.findAll();
   }
 
-  @Get(':id')
+  @Get('get-group/:id')
   @ApiOperation({ summary: 'Получить группу по id' })
   findOne(@Param('id') id: string) {
     return this.groupsService.findOne(+id);

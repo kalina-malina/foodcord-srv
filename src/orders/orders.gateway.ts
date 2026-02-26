@@ -54,20 +54,6 @@ export class OrdersGateway implements OnGatewayConnection, OnGatewayDisconnect {
       clientId: client.id,
       timestamp: new Date().toISOString(),
     });
-
-    // Автоматически отправляем список заказов новому клиенту
-    try {
-      const orders = await this.ordersService.findAll();
-      client.emit('orders_list', orders);
-      this.logger.log(
-        `📋 отправлен список заказов клиенту ${client.id}: ${orders.length} шт.`,
-      );
-    } catch (error) {
-      this.logger.error(
-        '❌ ошибка при отправке заказов новому клиенту:',
-        error,
-      );
-    }
   }
 
   handleDisconnect(client: Socket) {
@@ -78,6 +64,11 @@ export class OrdersGateway implements OnGatewayConnection, OnGatewayDisconnect {
   notifyNewOrder(order: any) {
     this.logger.log('📢 новый заказ:', order.orderId);
     this.server.to('orders_room').emit('new_order', order);
+  }
+
+  notifyNewOrderToStore(order: any, idStore: number) {
+    this.logger.log(`📢 новый заказ:${order.orderId}. Магазин: ${idStore}`);
+    this.server.to(`orders_room`).emit(`new_order_${idStore}`, order);
   }
 
   // Обновить статус заказа
@@ -111,10 +102,13 @@ export class OrdersGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // Получить все заказы
   @SubscribeMessage('get_orders')
-  async handleGetOrders(@ConnectedSocket() client: Socket) {
+  async handleGetOrders(
+    @MessageBody() idStore: number,
+    @ConnectedSocket() client: Socket,
+  ) {
     try {
-      const orders = await this.ordersService.findAll();
-      client.emit('orders_list', orders);
+      const orders = await this.ordersService.findAllStoreOrders(idStore);
+      client.emit(`orders_list_${idStore}`, orders);
       return { success: true };
     } catch (error) {
       this.logger.error('❌ ошибка при получении заказов:', error);
@@ -163,5 +157,10 @@ export class OrdersGateway implements OnGatewayConnection, OnGatewayDisconnect {
         message: 'Ошибка при получении информации о клиентах',
       };
     }
+  }
+
+  @SubscribeMessage('ping')
+  async pong(@ConnectedSocket() client: Socket) {
+    client.emit('pong');
   }
 }

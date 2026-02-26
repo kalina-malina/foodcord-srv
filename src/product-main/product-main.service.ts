@@ -3,7 +3,10 @@ import {
   ConflictException,
   Injectable,
 } from '@nestjs/common';
-import { CreateProductMainDto } from './dto/create-product-main.dto';
+import {
+  CopyProductFromStore,
+  CreateProductMainAndStoreDto,
+} from './dto/create-product-main.dto';
 import { DatabaseService } from '@/pg-connect/foodcord/orm/grud-postgres.service';
 import { GRUD_OPERATION } from '@/pg-connect/foodcord/orm/enum/metod.enum';
 import { S3StorageService } from '@/s3/storage.service';
@@ -21,7 +24,7 @@ export class ProductMainService {
     private configService: ConfigService,
   ) {}
 
-  async create(createProductMainDto: CreateProductMainDto): Promise<{
+  async create(createProductMainDto: CreateProductMainAndStoreDto): Promise<{
     message: string;
   }> {
     const {
@@ -41,6 +44,7 @@ export class ProductMainService {
       type,
       color,
       extras,
+      idStore,
     } = createProductMainDto;
 
     if (
@@ -64,6 +68,7 @@ export class ProductMainService {
         message: 'Не все поля заполнены',
       };
     }
+    const id_store = idStore;
     const transaction: PoolClient =
       await this.databaseService.beginTransaction();
     try {
@@ -95,6 +100,7 @@ export class ProductMainService {
           'proteins',
           'carbohydrates',
           'calories',
+          'id_store',
         ],
         transaction: transaction,
         data: [
@@ -113,6 +119,7 @@ export class ProductMainService {
             proteins,
             carbohydrates,
             calories,
+            id_store,
           },
         ],
       });
@@ -197,7 +204,7 @@ export class ProductMainService {
                   DISTINCT JSONB_BUILD_OBJECT(
                       'id', ext.id_product,
                       'name', ext.name,
-                      'price', ext.price,
+                      'price', etype.price,
                       'image', ext.image,
                       'weight', ext.weight
                   )
@@ -217,7 +224,7 @@ export class ProductMainService {
                   DISTINCT JSONB_BUILD_OBJECT(
                       'id', typ.id_product,
                       'name', typ.name,
-                      'price', typ.price,
+                      'price', ptype.price,
                       'weight', typ.weight
                   )
               ) FILTER (WHERE pm.id IS NOT NULL),
@@ -230,12 +237,15 @@ export class ProductMainService {
               'proteins', pm.proteins::numeric,
               'carbohydrates', pm.carbohydrates::numeric,
               'calories', pm.calories::numeric
-          ) AS information
+          ) AS information,
+           pm.id_store::int[] as "IdStore"
       FROM products_main pm
       LEFT JOIN groups po ON po.id = ANY(pm.groups)
       LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
       LEFT JOIN products_original typ ON typ.id = ANY(pm.type) and typ.type = 'type'
       LEFT JOIN products_original ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
+      LEFT JOIN product_original_store_price ptype on typ.id_product = ptype.id_product and ptype.id_store = ANY(pm.id_store)
+      LEFT JOIN product_original_store_price etype on ext.id_product = etype.id_product and etype.id_store = ANY(pm.id_store)
       LEFT JOIN products_main inf ON inf.id = pm.id
       LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
       GROUP BY
@@ -247,6 +257,102 @@ export class ProductMainService {
     const result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
       query: query,
+    });
+
+    if (result.length === 0) {
+      throw new BadRequestException('Продукт не найден');
+    }
+
+    return result.rows;
+  }
+
+  async findAllPerStore(idStore: number) {
+    const query = `
+         SELECT
+          pm.id::int,
+          pm.name,
+          pm.image,
+          pm.variant,
+          pm.color,
+          COALESCE(
+              JSONB_AGG(
+                  DISTINCT JSONB_BUILD_OBJECT(
+                      'id', po.id,
+                      'name', po.name
+                  )
+              ) FILTER (WHERE pm.id IS NOT NULL),
+              '[]'::jsonb
+          ) AS groups,
+          COALESCE(
+              JSONB_AGG(
+                  DISTINCT JSONB_BUILD_OBJECT(
+                      'id', gsub.id,
+                      'name', gsub.name
+                  )
+              ) FILTER (WHERE pm.id IS NOT NULL),
+              '[]'::jsonb
+          ) AS subgroups,
+          COALESCE(
+              JSONB_AGG(
+                  DISTINCT JSONB_BUILD_OBJECT(
+                      'id', ext.id_product,
+                      'name', ext.name,
+                      'price', etype.price,
+                      'image', ext.image,
+                      'weight', ext.weight
+                  )
+              ) FILTER (WHERE pm.id IS NOT NULL),
+              '[]'::jsonb
+          ) AS extras,
+            COALESCE(
+              JSONB_AGG(DISTINCT JSONB_BUILD_OBJECT(
+                      'id', ing.id,
+                      'name', ing.name
+                  )
+              ) FILTER (WHERE pm.id IS NOT NULL),
+              '[]'::jsonb
+          ) AS ingredients,
+          COALESCE(
+              JSONB_AGG(
+                  DISTINCT JSONB_BUILD_OBJECT(
+                      'id', typ.id_product,
+                      'name', typ.name,
+                      'price', ptype.price,
+                      'weight', typ.weight
+                  )
+              ) FILTER (WHERE pm.id IS NOT NULL),
+              '[]'::jsonb
+          ) AS type,
+              JSONB_BUILD_OBJECT(
+              'composition', pm.composition,
+              'description', pm.description,
+              'fats', pm.fats::numeric,
+              'proteins', pm.proteins::numeric,
+              'carbohydrates', pm.carbohydrates::numeric,
+              'calories', pm.calories::numeric
+          ) AS information,
+           COALESCE(to_jsonb(pm.id_store), '[]'::jsonb) AS "IdStore"
+      FROM products_main pm
+      LEFT JOIN groups po ON po.id = ANY(pm.groups)
+      LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
+      LEFT JOIN products_original typ ON typ.id = ANY(pm.type) and typ.type = 'type'
+      LEFT JOIN products_original ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
+      LEFT JOIN product_original_store_price ptype on typ.id_product = ptype.id_product and ptype.id_store = ANY(pm.id_store) and ptype.id_store = $1
+      LEFT JOIN product_original_store_price etype on ext.id_product = etype.id_product and etype.id_store = ANY(pm.id_store) and etype.id_store = $1
+      LEFT JOIN products_main inf ON inf.id = pm.id
+      LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
+      where $1 = ANY(pm.id_store)
+      and ptype.price is not null
+      GROUP BY
+          pm.id, pm.name, pm.image, pm.composition, pm.description,
+          pm.fats, pm.proteins, pm.carbohydrates, pm.calories,
+          pm.variant, pm.groups, pm.subgroups, pm.id_store;
+    `;
+
+    const result = await this.databaseService.executeOperation({
+      operation: GRUD_OPERATION.QUERY,
+      query: query,
+      params: [idStore],
     });
 
     if (result.length === 0) {
@@ -287,7 +393,6 @@ export class ProductMainService {
                   DISTINCT JSONB_BUILD_OBJECT(
                       'id', ext.id_product,
                       'name', ext.name,
-                      'price', ext.price,
                       'image', ext.image,
                       'weight', ext.weight
                   )
@@ -307,7 +412,100 @@ export class ProductMainService {
                   DISTINCT JSONB_BUILD_OBJECT(
                       'id', typ.id_product,
                       'name', typ.name,
-                      'price', typ.price,
+                      'weight', typ.weight
+                  )
+              ) FILTER (WHERE pm.id IS NOT NULL),
+              '[]'::jsonb
+          ) AS type,
+              JSONB_BUILD_OBJECT(
+              'composition', pm.composition,
+              'description', pm.description,
+              'fats', pm.fats::numeric,
+              'proteins', pm.proteins::numeric,
+              'carbohydrates', pm.carbohydrates::numeric,
+              'calories', pm.calories::numeric
+          ) AS information,
+          COALESCE(to_jsonb(pm.id_store), '[]'::jsonb) AS "IdStore"
+      FROM products_main pm
+      LEFT JOIN groups po ON po.id = ANY(pm.groups)
+      LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
+      LEFT JOIN products_original typ ON typ.id = ANY(pm.type) and typ.type = 'type'
+      LEFT JOIN products_original ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
+      
+      LEFT JOIN products_main inf ON inf.id = pm.id
+      LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
+      WHERE pm.id = $1
+      GROUP BY
+          pm.id, pm.name, pm.image, pm.composition, pm.description,
+          pm.fats, pm.proteins, pm.carbohydrates, pm.calories,
+          pm.variant, pm.groups, pm.subgroups, pm.id_store;
+    `;
+
+    const result = await this.databaseService.executeOperation({
+      operation: GRUD_OPERATION.QUERY,
+      query: query,
+      params: [id],
+    });
+
+    if (result.length === 0) {
+      throw new BadRequestException('Продукт не найден');
+    }
+
+    return result.rows[0];
+  }
+
+  async findOnePerStore(id: number, idStore: number) {
+    const query = `
+         SELECT
+          pm.id::int,
+          pm.name,
+          pm.image,
+          pm.variant,
+          pm.color,
+          COALESCE(
+              JSONB_AGG(
+                  DISTINCT JSONB_BUILD_OBJECT(
+                      'id', po.id,
+                      'name', po.name
+                  )
+              ) FILTER (WHERE pm.id IS NOT NULL),
+              '[]'::jsonb
+          ) AS groups,
+          COALESCE(
+              JSONB_AGG(
+                  DISTINCT JSONB_BUILD_OBJECT(
+                      'id', gsub.id,
+                      'name', gsub.name
+                  )
+              ) FILTER (WHERE pm.id IS NOT NULL),
+              '[]'::jsonb
+          ) AS subgroups,
+          COALESCE(
+              JSONB_AGG(
+                  DISTINCT JSONB_BUILD_OBJECT(
+                      'id', ext.id_product,
+                      'name', ext.name,
+                      'price', etype.price,
+                      'image', ext.image,
+                      'weight', ext.weight
+                  )
+              ) FILTER (WHERE pm.id IS NOT NULL),
+              '[]'::jsonb
+          ) AS extras,
+            COALESCE(
+              JSONB_AGG(DISTINCT JSONB_BUILD_OBJECT(
+                      'id', ing.id,
+                      'name', ing.name
+                  )
+              ) FILTER (WHERE pm.id IS NOT NULL),
+              '[]'::jsonb
+          ) AS ingredients,
+          COALESCE(
+              JSONB_AGG(
+                  DISTINCT JSONB_BUILD_OBJECT(
+                      'id', typ.id_product,
+                      'name', typ.name,
+                      'price', ptype.price,
                       'weight', typ.weight
                   )
               ) FILTER (WHERE pm.id IS NOT NULL),
@@ -326,9 +524,13 @@ export class ProductMainService {
       LEFT JOIN groups_sub gsub ON gsub.id = ANY(pm.subgroups)
       LEFT JOIN products_original typ ON typ.id = ANY(pm.type) and typ.type = 'type'
       LEFT JOIN products_original ext ON ext.id = ANY(pm.extras) and ext.type = 'extras'
+      LEFT JOIN product_original_store_price ptype on typ.id_product = ptype.id_product and ptype.id_store = ANY(pm.id_store)  and ptype.id_store = $2
+      LEFT JOIN product_original_store_price etype on ext.id_product = etype.id_product and etype.id_store = ANY(pm.id_store) and etype.id_store = $2
       LEFT JOIN products_main inf ON inf.id = pm.id
       LEFT JOIN products_ingredients ing ON ing.id = ANY(pm.ingredients)
       WHERE pm.id = $1
+      and $2 = ANY(pm.id_store)
+      and ptype.price is not null
       GROUP BY
           pm.id, pm.name, pm.image, pm.composition, pm.description,
           pm.fats, pm.proteins, pm.carbohydrates, pm.calories,
@@ -338,7 +540,7 @@ export class ProductMainService {
     const result = await this.databaseService.executeOperation({
       operation: GRUD_OPERATION.QUERY,
       query: query,
-      params: [id],
+      params: [id, idStore],
     });
 
     if (result.length === 0) {
@@ -363,6 +565,106 @@ export class ProductMainService {
 
   async update(id: number, dto: UpdateProductMainDto) {
     const existingProduct = await this.findOne(id);
+
+    const transaction: PoolClient =
+      await this.databaseService.beginTransaction();
+
+    try {
+      const currentImageUrl = existingProduct.image;
+      const { image, ...updateData } = dto;
+      const dbUpdateData = {
+        ...updateData,
+        id_store: updateData.idStore,
+      };
+
+      if (Object.keys(updateData).length > 0) {
+        await this.databaseService.executeOperation({
+          operation: GRUD_OPERATION.UPDATE,
+          table_name: 'products_main',
+          conflict: ['id'],
+          columnUpdate: [
+            'name',
+            'description',
+            'variant',
+            'groups',
+            'subgroups',
+            'ingredients',
+            'type',
+            'extras',
+            'composition',
+            'fats',
+            'proteins',
+            'carbohydrates',
+            'calories',
+            'color',
+            'id_store',
+          ],
+          data: [{ id, ...dbUpdateData }],
+          transaction: transaction,
+        });
+      }
+
+      if (image) {
+        if (currentImageUrl) {
+          const bucketName = this.configService.get('S3_BUCKET_NAME');
+          if (bucketName && currentImageUrl.includes(bucketName)) {
+            const urlParts = currentImageUrl.split('/');
+            const fileName = urlParts[urlParts.length - 1];
+            const basePath = `foodcourt/${S3_PATCH_ENUM.BANNER_MAIN_IMAGE}/`;
+
+            await this.s3Storage.deleteFile(bucketName, basePath + fileName);
+          }
+        }
+
+        const bucketName = this.configService.get('S3_BUCKET_NAME');
+        if (!bucketName) {
+          throw new Error('Отсутствуют настройки S3');
+        }
+
+        const basePath = `foodcourt/${S3_PATCH_ENUM.BANNER_MAIN_IMAGE}/`;
+        const fileName = `${id}.webp`;
+
+        const coverWebpBuffer = await sharp(image.buffer)
+          .webp({ quality: 90, lossless: true })
+          .toBuffer();
+
+        await this.s3Storage.uploadFile(
+          bucketName,
+          basePath + fileName,
+          coverWebpBuffer,
+          'image/webp',
+        );
+
+        const newImageUrl = `https://${this.configService.get('S3_BUCKET_ID')}.selstorage.ru/${basePath}${fileName}`;
+
+        await this.databaseService.executeOperation({
+          operation: GRUD_OPERATION.UPDATE,
+          table_name: 'products_main',
+          conflict: ['id'],
+          columnUpdate: ['image'],
+          transaction: transaction,
+          data: [{ id, image: newImageUrl }],
+        });
+      }
+
+      await this.databaseService.commitTransaction(transaction);
+      return {
+        message: `Продукт ${id} успешно обновлен`,
+      };
+    } catch (error: any) {
+      await this.databaseService.rollbackTransaction(transaction);
+      throw new BadRequestException(error.message);
+    } finally {
+      await this.databaseService.releaseClient(transaction);
+    }
+  }
+
+  async updateProductPerStore(
+    id: number,
+    idStore: number,
+    dto: UpdateProductMainDto,
+  ) {
+    const existingProduct = await this.findOnePerStore(id, idStore);
 
     const transaction: PoolClient =
       await this.databaseService.beginTransaction();
@@ -444,6 +746,63 @@ export class ProductMainService {
       await this.databaseService.commitTransaction(transaction);
       return {
         message: `Продукт ${id} успешно обновлен`,
+      };
+    } catch (error: any) {
+      await this.databaseService.rollbackTransaction(transaction);
+      throw new BadRequestException(error.message);
+    } finally {
+      await this.databaseService.releaseClient(transaction);
+    }
+  }
+
+  async copyProductFromStore(copyProductFromStore: CopyProductFromStore) {
+    const transaction: PoolClient =
+      await this.databaseService.beginTransaction();
+
+    try {
+      // Защита от пустого массива
+      if (copyProductFromStore.id.length === 0) {
+        throw new BadRequestException('Массив id не должен быть пустым');
+      }
+
+      // Генерируем placeholders: $1, $2, $3, ...
+      const placeholders = copyProductFromStore.id
+        .map((_, i) => `$${i + 1}`)
+        .join(', ');
+
+      const result = (await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query: `SELECT id::int, id_store::int[] as "idStore" FROM products_main WHERE id IN (${placeholders})`,
+        params: copyProductFromStore.id,
+      })) as { rows: { id: number; idStore: number[] }[] };
+      const itogResult = result.rows.filter(
+        (row) => !row.idStore.includes(copyProductFromStore.idStore),
+      );
+      const addResult = itogResult.map(
+        (row) =>
+          (row = {
+            id: row.id,
+            idStore: [...row.idStore, copyProductFromStore.idStore],
+          }),
+      );
+      for (const row of addResult) {
+        await this.databaseService.executeOperation({
+          operation: GRUD_OPERATION.UPDATE,
+          table_name: 'products_main',
+          conflict: ['id'],
+          columnUpdate: ['id_store'],
+          data: [
+            {
+              id: row.id,
+              id_store: row.idStore,
+            },
+          ],
+          transaction: transaction,
+        });
+      }
+      await this.databaseService.commitTransaction(transaction);
+      return {
+        message: `Успешно добавлен магазин ${copyProductFromStore.idStore} в продукты ${itogResult.map((row) => row.id)}`,
       };
     } catch (error: any) {
       await this.databaseService.rollbackTransaction(transaction);

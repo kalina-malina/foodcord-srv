@@ -11,7 +11,10 @@ import {
   Patch,
 } from '@nestjs/common';
 import { ProductMainService } from './product-main.service';
-import { CreateProductMainDto } from './dto/create-product-main.dto';
+import {
+  CopyProductFromStore,
+  CreateProductMainAndStoreDto,
+} from './dto/create-product-main.dto';
 
 import {
   ApiConsumes,
@@ -32,7 +35,7 @@ export class ProductMainController {
   constructor(private readonly productMainService: ProductMainService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Post()
+  @Post('create-product-main')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'image', maxCount: 1 }], multerImageOptions),
@@ -41,13 +44,22 @@ export class ProductMainController {
     summary: 'Создание продукта для отображения на устройстве',
   })
   async create(
-    @Body() createProductMainDto: CreateProductMainDto,
+    @Body() createProductMainDto: CreateProductMainAndStoreDto,
     @UploadedFiles() files: { image?: Express.Multer.File[] },
   ) {
     if (files?.image?.[0]) {
       createProductMainDto.image = files.image[0];
     }
     return this.productMainService.create(createProductMainDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBody({ type: CopyProductFromStore })
+  @Post('copy-product-main-from-store')
+  async copyProductFromStore(
+    @Body() copyProductFromStore: CopyProductFromStore,
+  ) {
+    return this.productMainService.copyProductFromStore(copyProductFromStore);
   }
 
   @Get()
@@ -66,6 +78,34 @@ export class ProductMainController {
   @ApiResponse({ type: ResponseProductMainDto })
   async findOne(@Param('id') id: string) {
     return await this.productMainService.findOne(+id);
+  }
+
+  @Get('find-all-product-per-store/:idStore')
+  @ApiOperation({
+    summary: 'Получение списка продуктов для отображения на устройстве',
+  })
+  @ApiResponse({ type: ResponseProductMainDto })
+  async findAllPerStore(@Param('idStore') idStore: string) {
+    const storeIdNum = +idStore;
+    return await this.productMainService.findAllPerStore(storeIdNum);
+  }
+
+  @Get('find-all-product-per-store/:idStore/:id')
+  @ApiOperation({
+    summary: 'Получение продукта по id',
+  })
+  @ApiResponse({ type: ResponseProductMainDto })
+  async findOnePerStore(
+    @Param('idStore') idStore: string,
+    @Param('id') id: string,
+  ) {
+    const storeIdNum = +idStore;
+    const productIdNum = +id;
+
+    return await this.productMainService.findOnePerStore(
+      productIdNum,
+      storeIdNum,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

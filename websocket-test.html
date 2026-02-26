@@ -74,7 +74,7 @@
                 socket.disconnect();
             }
 
-            socket = io('http://10.32.2.117:3006/orders');
+            socket = io('http://localhost:3444/orders');
             
             socket.on('connect', () => {
                 document.getElementById('status').textContent = 'Подключен';
@@ -96,7 +96,7 @@
             });
 
             // Слушаем новые заказы
-            socket.on('new_order', (order) => {
+            socket.on('new_order_42002', (order) => {
                 log(`🆕 Новый заказ: #${order.orderId}`);
                 addOrderToList(order, 'order');
             });
@@ -137,7 +137,7 @@
 
         function getOrders() {
             if (socket) {
-                socket.emit('get_orders');
+                socket.emit('get_orders', 42002);
                 log('📋 Запрашиваем список заказов...');
             }
         }

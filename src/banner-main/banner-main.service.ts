@@ -25,6 +25,11 @@ export class BannerMainService {
     message: string;
   }> {
     let result = null;
+    if (!createBannerMainDto.store || createBannerMainDto.store.length < 1) {
+      throw new ConflictException(
+        'Ошибка при создании баннера TV: не принимаем пустое поле store',
+      );
+    }
 
     const NameBanner = transformName(createBannerMainDto.name);
 
@@ -119,6 +124,30 @@ export class BannerMainService {
     }
   }
 
+  async findAllPerStore(idStore: number) {
+    try {
+      const result = await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query: `SELECT
+           id:: int, seconds:: int, url, type, name, type, store, is_active as
+           "isActive", "create_at" as "createAt", "updated_at" as "updatedAt" 
+           FROM banner_main 
+           where $1 = ANY(store) and is_active = true
+           ORDER BY id DESC`,
+        params: [idStore],
+      });
+      return {
+        success: true,
+        data: result.rows,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: `Ошибка при получении списка баннеров: ${error.message}`,
+      };
+    }
+  }
+
   async findOne(id: number) {
     try {
       const result = await this.databaseService.executeOperation({
@@ -147,8 +176,43 @@ export class BannerMainService {
     }
   }
 
+  async findOnePerStore(idStore: number, id: number) {
+    try {
+      const result = await this.databaseService.executeOperation({
+        operation: GRUD_OPERATION.QUERY,
+        query: `SELECT id:: int, seconds:: int, url, type, name, type, store, is_active as
+           "isActive", "create_at" as "createAt", "updated_at" as "updatedAt" FROM banner_main 
+           WHERE id = $1
+           and $2 = ANY(store)`,
+        params: [id, idStore],
+      });
+
+      if (result.rows.length === 0) {
+        return {
+          success: false,
+          message: 'Баннер не найден',
+        };
+      }
+
+      return {
+        success: true,
+        data: result.rows[0],
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: `Ошибка при получении баннера: ${error.message}`,
+      };
+    }
+  }
+
   async update(id: number, updateBannerMainDto: UpdateBannerMainDto) {
     let result = null;
+    if (!updateBannerMainDto.store || updateBannerMainDto.store.length < 1) {
+      throw new ConflictException(
+        'Ошибка при создании баннера TV: не принимаем пустое поле store',
+      );
+    }
     const transaction: PoolClient =
       await this.databaseService.beginTransaction();
 

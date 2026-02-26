@@ -28,10 +28,12 @@ export class CreateBannerMainDto {
   @IsOptional()
   @Transform(({ value }) => transformNumberArray(value))
   @IsArray()
-  @IsNumber({}, { each: true })
   store?: number[];
 
   @ApiProperty({ description: 'Активен ли баннер', example: true })
+  @Transform(({ value }) => {
+    return value === 'true';
+  })
   @IsOptional()
   @IsBoolean()
   is_active?: boolean;
