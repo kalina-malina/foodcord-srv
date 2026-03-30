@@ -12,6 +12,7 @@ import { transformName } from '@/utils/transform-name';
 import { GRUD_OPERATION } from '@/pg-connect/foodcord/orm/enum/metod.enum';
 import { PoolClient } from 'pg';
 import { S3_PATCH_ENUM } from '@/s3/enum/s3.pach.enum';
+import { CountTvDto } from './dto/count-tv.dto';
 
 @Injectable()
 export class BannerTvService {
@@ -280,5 +281,31 @@ export class BannerTvService {
         message: `Ошибка при удалении баннера TV: ${error.message}`,
       };
     }
+  }
+
+  async setCountTv(body: CountTvDto) {
+    const result = await this.databaseService.executeOperation({
+      operation: GRUD_OPERATION.INSERT_ON_UPDAETE,
+      table_name: 'count_tv',
+      conflict: ['id_store'],
+      columnUpdate: ['count'],
+      data: [{ id_store: body.idStore, count: body.count }],
+    });
+    return {
+      success: true,
+      message: 'Количество телевизоров сохранено',
+      data: result,
+    };
+  }
+
+  async getCountTv(idStore: number) {
+    const result = await this.databaseService.executeOperation({
+      operation: GRUD_OPERATION.QUERY,
+      query: `select count from count_tv where id_store = $1`,
+      params: [idStore],
+    });
+    return {
+      count: result.rows[0]?.count || 0,
+    };
   }
 }

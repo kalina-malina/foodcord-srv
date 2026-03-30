@@ -15,6 +15,7 @@ import { CreateBannerTvDto } from './dto/create-banner-tv.dto';
 import { UpdateBannerTvDto } from './dto/update-banner-tv.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerUniversalOptions } from '@/s3/multer.config';
+import { CountTvDto } from './dto/count-tv.dto';
 
 @ApiTags('Баннеры TV')
 @Controller('banner-tv')
@@ -52,6 +53,24 @@ export class BannerTvController {
   @ApiOperation({ summary: 'Получение баннера TV по ID' })
   findOne(@Param('id') id: number) {
     return this.bannerTvService.findOne(id);
+  }
+
+  @Get('get-count-tv/:idStore')
+  @ApiOperation({ summary: 'Получение числа телевизоров по id магазина' })
+  getCountTv(@Param('idStore') idStore: string) {
+    return this.bannerTvService.getCountTv(+idStore);
+  }
+
+  @Post('set-count-tv')
+  @ApiOperation({ summary: 'Сохранить число телевизоров по id магазина' })
+  setCountTv(@Body() body: CountTvDto) {
+    return this.bannerTvService.setCountTv(body);
+  }
+
+  @Patch('set-count-tv')
+  @ApiOperation({ summary: 'Обновить число телевизоров по id магазина' })
+  patchCountTv(@Body() body: CountTvDto) {
+    return this.bannerTvService.setCountTv(body);
   }
 
   @Patch(':id')

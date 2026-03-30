@@ -76,6 +76,10 @@ export class FindCodeResponseDto {
   })
   @IsBoolean()
   success: boolean;
+
+  @ApiProperty({ description: 'Название магазина' })
+  @IsString()
+  nameStore?: string;
 }
 
 export class PgFieldDto {
@@ -104,6 +108,9 @@ export class PgFieldDto {
 class RowDto {
   @ApiProperty({ example: 42002 })
   idStore: number;
+
+  @ApiProperty({ example: 'Молодежный 2' })
+  nameStore: string;
 }
 
 export class QueryResultDto {

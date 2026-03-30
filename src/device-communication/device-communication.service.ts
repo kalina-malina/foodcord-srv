@@ -91,7 +91,12 @@ export class DeviceCommunicationService {
     try {
       const result = (await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query: `Select id_store as "idStore" from device_communication where code = $1`,
+        query: `Select
+         dc.id_store as "idStore",  
+         s.name as "nameStore"
+         from device_communication as dc
+         left join stores as s on s.id_store = dc.id_store
+          where code = $1`,
         params: [findCodeDto.code],
         transaction: transaction,
       })) as QueryIdStoreResultDto;
@@ -101,6 +106,7 @@ export class DeviceCommunicationService {
       return {
         message: 'Номер магазина получен',
         idStore: result.rows[0]?.idStore!,
+        nameStore: result.rows[0]?.nameStore!,
         success: true,
       };
     } catch (error) {
@@ -115,6 +121,8 @@ export class DeviceCommunicationService {
         success: false,
         message:
           'Не удалось найти код связи планшет-терминал. Попробуйте позже.',
+        idStore: 0,
+        nameStore: '',
       };
     } finally {
       await this.databaseService.releaseClient(transaction);
