@@ -20,6 +20,20 @@ export class RedisService {
     });
   }
 
+  /** SET NX EX — true, если ключ записан (первый в сессии), false если уже был. */
+  async setTtlNx(
+    key: string,
+    value: string,
+    ttl: number = 3600,
+  ): Promise<boolean> {
+    const r = await this.redisClient.set(
+      `${process.env.REDIS_USER}:${key}`,
+      value,
+      { NX: true, EX: ttl },
+    );
+    return r === 'OK';
+  }
+
   async get<T>(key: string): Promise<T | null> {
     const result = await this.redisClient.get(
       `${process.env.REDIS_USER}:${key}`,
