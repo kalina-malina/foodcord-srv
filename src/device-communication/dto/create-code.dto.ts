@@ -1,16 +1,7 @@
 import { transformNumber } from '@/utils/transform-array';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import {
-  IsBoolean,
-  IsNumber,
-  IsOptional,
-  IsString,
-  Max,
-  MaxLength,
-  Min,
-  MinLength,
-} from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateCodeDto {
   @ApiProperty({ description: 'ID магазина' })
@@ -29,44 +20,6 @@ export class CreateCodeTvDto {
   })
   @IsNumber()
   @IsOptional()
-  code: number;
-}
-
-/**
- * Один token — один code для всех ТВ (хранится в Redis).
- * Первый ТВ может передать code (опционально), иначе сервер выберет 4-значный.
- * Планшет один раз вводит этот code и вызывает find-one-tv-pad.
- */
-export class InitTvPairingByTokenDto {
-  @ApiProperty({
-    description:
-      'Общий идентификатор группы ТВ (одинаковый на всех экранах одного зала)',
-  })
-  @IsString()
-  @MinLength(1)
-  @MaxLength(256)
-  token: string;
-
-  @ApiProperty({
-    description:
-      'Необязательно: желаемый код; если сессия уже есть — возвращается закреплённый код',
-    required: false,
-  })
-  @IsOptional()
-  @Transform(({ value }) => transformNumber(value))
-  @IsNumber()
-  @Min(1000)
-  @Max(999999)
-  code?: number;
-}
-
-/** Клиент задаёт код на ТВ; несколько ТВ с одним code вызывают тот же endpoint — в БД одна строка. */
-export class RegisterTvCodeDto {
-  @ApiProperty({ description: 'Код сопряжения (показывается на ТВ, вводится на планшете)' })
-  @Transform(({ value }) => transformNumber(value))
-  @IsNumber()
-  @Min(1000)
-  @Max(999999)
   code: number;
 }
 
