@@ -8,8 +8,16 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  Query,
+  ParseIntPipe,
 } from '@nestjs/common';
-import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { BannerTvService } from './banner-tv.service';
 import { CreateBannerTvDto } from './dto/create-banner-tv.dto';
 import { UpdateBannerTvDto } from './dto/update-banner-tv.dto';
@@ -45,8 +53,18 @@ export class BannerTvController {
 
   @Get('get-all-store-bunner-tv/:idStore')
   @ApiOperation({ summary: 'Получение списка всех баннеров TV магазинов' })
-  findAllStoreBunner(@Param('idStore') idStore: string) {
-    return this.bannerTvService.findAllBunnerPerStore(+idStore);
+  @ApiQuery({
+    name: 'tvNumber',
+    required: false,
+    type: Number,
+    description:
+      'Номер ТВ. Если не передан — все активные баннеры точки (как раньше)',
+  })
+  findAllStoreBunner(
+    @Param('idStore') idStore: string,
+    @Query('tvNumber', new ParseIntPipe({ optional: true })) tvNumber?: number,
+  ) {
+    return this.bannerTvService.findAllBunnerPerStore(+idStore, tvNumber);
   }
 
   @Get('get-one-bunner-tv/:id')
@@ -72,6 +90,12 @@ export class BannerTvController {
   patchCountTv(@Body() body: CountTvDto) {
     return this.bannerTvService.setCountTv(body);
   }
+
+  // @Delete('delete-count-tv/:idStore')
+  // @ApiOperation({ summary: 'Удалить телевизоры на точке магазина' })
+  // deleteCountTv(@Param('idStore') idStore: string, count: number) {
+  //   return this.bannerTvService.deleteCountTv(+idStore, count);
+  // }
 
   @Patch(':id')
   @ApiConsumes('multipart/form-data')
