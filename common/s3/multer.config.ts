@@ -48,12 +48,15 @@ export const multerUniversalOptions = {
     files: 100,
   },
   fileFilter: (req: any, file: any, cb: any) => {
-    if (file.mimetype.match(/\/(webp|png|webm|)$/)) {
+    if (
+      file.mimetype.match(/\/(webp|png)$/) ||
+      file.mimetype.startsWith('video/')
+    ) {
       cb(null, true);
     } else {
       cb(
         new BadRequestException(
-          'Можно загружать только изображения (webp, png) и видео (webm)!',
+          'Можно загружать только изображения (webp, png) и видео (любой формат — на сервере конвертируется в MP4 H.264)!',
         ),
         false,
       );

@@ -123,15 +123,19 @@ export class BannerTvService {
       };
     }
   }
-  async findAllBunnerPerStore(idStore: number) {
+  async findAllBunnerPerStore(idStore: number, tvNumber?: number) {
     try {
+      const base = `SELECT id::int, name, url, type, seconds, store, is_active as "isActive", tv_number as "tvNumber", "create_at" as "createAt", "updated_at" as "updatedAt" 
+          FROM banner_tv 
+          where $1 = any(store) and is_active = true`;
+      const tvClause = tvNumber === undefined ? '' : ' and tv_number = $2';
+      const query = `${base}${tvClause} ORDER BY id DESC`;
+      const params = tvNumber === undefined ? [idStore] : [idStore, tvNumber];
+
       const result = await this.databaseService.executeOperation({
         operation: GRUD_OPERATION.QUERY,
-        query: `SELECT id::int, name, url, type, seconds, store, is_active as "isActive", tv_number as "tvNumber", "create_at" as "createAt", "updated_at" as "updatedAt" 
-          FROM banner_tv 
-          where $1 = any(store) and is_active = true
-          ORDER BY id DESC`,
-        params: [idStore],
+        query,
+        params,
       });
       return {
         success: true,
@@ -308,4 +312,19 @@ export class BannerTvService {
       count: result.rows[0]?.count || 0,
     };
   }
+
+  // async deleteCountTv(idStore: number, count: number) {
+  //   const query = `
+  //   delete from count_tv where id_store = $1 and count = $2
+  //   `;
+  //   const result = await this.databaseService.executeOperation({
+  //     operation: GRUD_OPERATION.DELETE,
+  //     query: query,
+  //     params: [idStore, count],
+  //   });
+  //   return {
+  //     success: true,
+  //     message: 'Телевизоры на точке магазина успешно удалены',
+  //   };
+  // }
 }
